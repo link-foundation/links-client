@@ -1,94 +1,75 @@
-// Simple logger utility for links-client
-// Provides basic logging functionality with different log levels
+// Minimal logger utility for links-client
+// Provides simple logging functionality with support for structured logging
 
-const LOG_LEVELS = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  debug: 3
-};
+/**
+ * Format log message with optional context object
+ * @param {string} level - Log level
+ * @param {object|string} contextOrMessage - Context object or message string
+ * @param {string} message - Message string (optional if first arg is string)
+ * @returns {void}
+ */
+function formatLog(level, contextOrMessage, message) {
+  const timestamp = new Date().toISOString();
+  const levelUpper = level.toUpperCase();
 
-class Logger {
-  constructor() {
-    this.level = process.env.LOG_LEVEL || 'info';
-  }
-
-  /**
-   * Check if a log level should be output
-   * @param {string} level - Log level to check
-   * @returns {boolean}
-   */
-  shouldLog(level) {
-    return LOG_LEVELS[level] <= LOG_LEVELS[this.level];
-  }
-
-  /**
-   * Format a log message
-   * @param {string} level - Log level
-   * @param {object|string} data - Data to log
-   * @param {string} message - Optional message
-   * @returns {string}
-   */
-  formatMessage(level, data, message) {
-    const timestamp = new Date().toISOString();
-    const levelStr = level.toUpperCase().padEnd(5);
-
-    if (typeof data === 'string') {
-      return `[${timestamp}] ${levelStr} ${data}`;
-    }
-
-    if (message) {
-      return `[${timestamp}] ${levelStr} ${message} ${JSON.stringify(data)}`;
-    }
-
-    return `[${timestamp}] ${levelStr} ${JSON.stringify(data)}`;
-  }
-
-  /**
-   * Log an error message
-   * @param {object|string} data - Data to log
-   * @param {string} message - Optional message
-   */
-  error(data, message) {
-    if (this.shouldLog('error')) {
-      console.error(this.formatMessage('error', data, message));
-    }
-  }
-
-  /**
-   * Log a warning message
-   * @param {object|string} data - Data to log
-   * @param {string} message - Optional message
-   */
-  warn(data, message) {
-    if (this.shouldLog('warn')) {
-      console.warn(this.formatMessage('warn', data, message));
-    }
-  }
-
-  /**
-   * Log an info message
-   * @param {object|string} data - Data to log
-   * @param {string} message - Optional message
-   */
-  info(data, message) {
-    if (this.shouldLog('info')) {
-      console.log(this.formatMessage('info', data, message));
-    }
-  }
-
-  /**
-   * Log a debug message
-   * @param {object|string} data - Data to log
-   * @param {string} message - Optional message
-   */
-  debug(data, message) {
-    if (this.shouldLog('debug')) {
-      console.log(this.formatMessage('debug', data, message));
-    }
+  // Handle both formats: logger.info('message') and logger.info({context}, 'message')
+  if (typeof contextOrMessage === 'string') {
+    // Simple format: logger.info('message')
+    console.log(`[${timestamp}] [${levelUpper}] ${contextOrMessage}`);
+  } else if (typeof contextOrMessage === 'object' && message) {
+    // Structured format: logger.info({key: value}, 'message')
+    const contextStr = JSON.stringify(contextOrMessage);
+    console.log(`[${timestamp}] [${levelUpper}] ${message} ${contextStr}`);
+  } else {
+    // Fallback
+    console.log(`[${timestamp}] [${levelUpper}]`, contextOrMessage, message || '');
   }
 }
 
-// Export a singleton instance
-const logger = new Logger();
+const logger = {
+  /**
+   * Log info message
+   * @param {object|string} contextOrMessage - Context object or message
+   * @param {string} message - Message (optional)
+   */
+  info: (contextOrMessage, message) => {
+    formatLog('info', contextOrMessage, message);
+  },
+
+  /**
+   * Log error message
+   * @param {object|string} contextOrMessage - Context object or message
+   * @param {string} message - Message (optional)
+   */
+  error: (contextOrMessage, message) => {
+    formatLog('error', contextOrMessage, message);
+  },
+
+  /**
+   * Log warning message
+   * @param {object|string} contextOrMessage - Context object or message
+   * @param {string} message - Message (optional)
+   */
+  warn: (contextOrMessage, message) => {
+    formatLog('warn', contextOrMessage, message);
+  },
+
+  /**
+   * Log debug message
+   * @param {object|string} contextOrMessage - Context object or message
+   * @param {string} message - Message (optional)
+   */
+  debug: (contextOrMessage, message) => {
+    // Only log debug messages if DEBUG environment variable is set
+    if (process.env.DEBUG) {
+      formatLog('debug', contextOrMessage, message);
+    }
+  },
+
+  /**
+   * Current log level
+   */
+  level: 'info'
+};
+
 export default logger;
