@@ -95,7 +95,7 @@ await authStorage.setPassword(user.userId, {
 
 ## Лицензия
 
-MIT
+The Unlicense
 
 ## Ссылки
 
