@@ -9,7 +9,7 @@
  * - Retrieve user information
  */
 
-import AuthStorageService from '../src/services/AuthStorageService.js';
+import AuthStorageService from '../src/services/auth-storage-service.js';
 
 async function main() {
   const authStorage = new AuthStorageService();

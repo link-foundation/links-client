@@ -9,7 +9,7 @@
  * 4. Properly integrates with the link-cli database
  */
 
-import AuthStorageService from '../src/services/AuthStorageService.js';
+import AuthStorageService from '../src/services/auth-storage-service.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';

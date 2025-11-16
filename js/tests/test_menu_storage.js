@@ -1,5 +1,5 @@
 // test-linkdb-menu.js - Test script for link-cli based menu storage
-import MenuStorageService from '../src/services/MenuStorageService.js';
+import MenuStorageService from '../src/services/menu-storage-service.js';
 
 const menuStorage = new MenuStorageService();
 

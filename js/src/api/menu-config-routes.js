@@ -1,7 +1,7 @@
 // menuConfigLinkDB.js - Menu configuration management routes using link-cli database
 import express from 'express';
 import logger from '../utils/logger.js';
-import MenuStorageService from '../services/MenuStorageService.js';
+import MenuStorageService from '../services/menu-storage-service.js';
 
 const menuStorage = new MenuStorageService();
 

@@ -9,7 +9,7 @@
  * - Delete links
  */
 
-import LinkDBService from '../src/services/LinkDBService.js';
+import LinkDBService from '../src/services/link-db-service.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';

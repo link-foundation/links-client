@@ -80,9 +80,9 @@ This implementation uses the **actual clink command-line tool**, not a mock or d
 ### 4. Implementation Files
 
 **Core Services**:
-- `LinkDBService.js` - Wrapper for clink command execution
-- `AuthStorageService.js` - High-level auth data management
-- `MenuStorageService.js` - Menu storage using same pattern
+- `link-db-service.js` - Wrapper for clink command execution
+- `auth-storage-service.js` - High-level auth data management
+- `menu-storage-service.js` - Menu storage using same pattern
 
 **API Routes**:
 - `backend/monolith/src/api/routes/authDataLinkDB.js` - REST API endpoints
@@ -99,7 +99,7 @@ This implementation uses the **actual clink command-line tool**, not a mock or d
 ### 5. How LinkDBService Works
 
 ```javascript
-import LinkDBService from './LinkDBService.js';
+import LinkDBService from './link-db-service.js';
 
 const linkDB = new LinkDBService('/path/to/database.links');
 

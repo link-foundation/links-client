@@ -8,7 +8,7 @@
  * - Get storage statistics
  */
 
-import MenuStorageService from '../src/services/MenuStorageService.js';
+import MenuStorageService from '../src/services/menu-storage-service.js';
 
 async function main() {
   const menuStorage = new MenuStorageService();

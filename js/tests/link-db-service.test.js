@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import LinkDBService from '../LinkDBService.js';
+import LinkDBService from '../src/services/link-db-service.js';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';

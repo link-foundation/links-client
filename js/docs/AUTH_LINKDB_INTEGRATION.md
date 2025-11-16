@@ -150,9 +150,9 @@ backend/monolith/
 ├── src/
 │   ├── services/
 │   │   └── linkdb/
-│   │       ├── LinkDBService.js           # Low-level link-cli wrapper
-│   │       ├── MenuStorageService.js      # Menu storage (existing)
-│   │       ├── AuthStorageService.js      # Authentication storage (NEW)
+│   │       ├── link-db-service.js           # Low-level link-cli wrapper
+│   │       ├── menu-storage-service.js      # Menu storage (existing)
+│   │       ├── auth-storage-service.js      # Authentication storage (NEW)
 │   │       └── __tests__/
 │   │           └── AuthStorageService.spec.js # Unit tests
 │   └── api/
@@ -208,7 +208,7 @@ High-level service for authentication data storage using link-cli.
 **Example Usage**:
 
 ```javascript
-import AuthStorageService from './services/AuthStorageService.js';
+import AuthStorageService from './services/auth-storage-service.js';
 
 const authStorage = new AuthStorageService();
 
@@ -634,7 +634,7 @@ If you have existing user data in PostgreSQL/MySQL:
 ### Example Migration Script
 
 ```javascript
-import AuthStorageService from './services/AuthStorageService.js';
+import AuthStorageService from './services/auth-storage-service.js';
 import oldDatabase from './old-db-connection.js';
 
 const authStorage = new AuthStorageService();
@@ -694,7 +694,7 @@ export PATH="$PATH:$HOME/.dotnet/tools"
 
 **Error**: `Failed to parse query`
 
-**Solution**: Check LiNo query syntax in LinkDBService.js. Common issues:
+**Solution**: Check LiNo query syntax in link-db-service.js. Common issues:
 - Missing parentheses
 - Incorrect variable names
 - Quote escaping
