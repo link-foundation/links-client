@@ -1,103 +1,116 @@
 # links-client
 
-Клиентская библиотека Node.js для [link-cli](https://github.com/link-foundation/link-cli) — реализация базы данных Links Theory.
+Client library for [link-cli](https://github.com/link-foundation/link-cli) — implementation of Links Theory database.
 
-## Установка
+Available in **JavaScript** and **Python**.
 
-### Предварительные условия
+## Language Implementations
 
-Установите link-cli глобально:
+This repository contains implementations in multiple languages:
+
+- **[JavaScript/Node.js](js/)** - See [js/README.md](js/README.md) for JavaScript-specific documentation
+- **[Python](python/)** - See [python/README.md](python/README.md) for Python-specific documentation
+
+## Quick Start
+
+### Prerequisites
+
+Install link-cli globally:
 ```bash
 dotnet tool install --global clink
 ```
 
-### Установка пакета
+### JavaScript/Node.js
 
 ```bash
-npm install @unidel2035/links-client
+cd js
+npm install
 ```
-
-Или воспользуйтесь GitHub напрямую:
-
-```bash
-npm install git+https://github.com/unidel2035/links-client.git
-```
-
-## Использование
-
-### Основное Использование
 
 ```javascript
 import { LinkDBService } from '@unidel2035/links-client';
 
-const db = new LinkDBService('/путь/к/базеданных.ссылки');
+const db = new LinkDBService('/path/to/database.links');
 
-// Создать ссылку
-const ссылка = await db.СоздатьСсылку(100, 200);
-console.log(ссылка); // { идентификатор: 1, источник: 100, целевая: 200 }
+// Create a link
+const link = await db.createLink(100, 200);
+console.log(link); // { id: 1, source: 100, target: 200 }
 
-// Прочитать все ссылки
-const ссылки = await db.ПрочитатьСсылки();
+// Read all links
+const links = await db.readAllLinks();
 
-// Удалить ссылку
-await db.УдалитьСсылку(1);
+// Delete a link
+await db.deleteLink(1);
 ```
 
-### Menu Storage
+### Python
 
-```javascript
-import { MenuStorageService } from '@unidel2035/links-client';
-
-const menuStorage = new MenuStorageService();
-
-const menu = [
-  {
-    label: "Dashboard",
-    icon: "pi pi-home",
-    to: "/dashboard",
-    items: [
-      { label: "Analytics", to: "/dashboard/analytics" }
-    ]
-  }
-];
-
-await menuStorage.storeMenuStructure(menu, 0);
-const retrievedMenu = await menuStorage.getMenuStructure(0);
+```bash
+cd python
+pip install -e .
 ```
 
-### Authentication Storage
+```python
+from links_client import LinkDBService
 
-```javascript
-import { AuthStorageService } from '@unidel2035/links-client';
+db = LinkDBService('/path/to/database.links')
 
-const authStorage = new AuthStorageService();
+# Create a link
+link = db.create_link(100, 200)
+print(link)  # {'id': 1, 'source': 100, 'target': 200}
 
-// Создать пользователя
-const user = await authStorage.createUser({
-  username: "алиса",
-  email: "alice@example.com"
-});
+# Read all links
+links = db.read_all_links()
 
-// Набор пароля
-await authStorage.setPassword(user.userId, {
-  hash: "hashed_password",
-  salt: "random_salt"
-});
+# Delete a link
+db.delete_link(1)
 ```
 
-## API
+## Features
 
-Подробную документацию по API см. в docs/.
+Both implementations provide:
 
-## Примеры
+- **LinkDBService** - Core database operations (CRUD for links)
+- **MenuStorageService** - Store and retrieve menu configurations
+- **AuthStorageService** - Store authentication data (users, tokens, passwords)
 
-Примеры использования см. в examples/.
+## Repository Structure
 
-## Лицензия
+```
+links-client/
+├── js/                 # JavaScript/Node.js implementation
+│   ├── src/           # Source code
+│   ├── examples/      # Usage examples
+│   ├── tests/         # Test suite
+│   ├── docs/          # Documentation
+│   └── package.json   # NPM package configuration
+├── python/            # Python implementation
+│   ├── links_client/  # Package source code
+│   ├── examples/      # Usage examples
+│   ├── tests/         # Test suite
+│   ├── docs/          # Documentation
+│   └── pyproject.toml # Python package configuration
+├── README.md          # This file
+└── LICENSE            # The Unlicense
+
+```
+
+## Documentation
+
+- JavaScript documentation: [js/docs/](js/docs/)
+- Python documentation: [python/docs/](python/docs/)
+
+## Examples
+
+- JavaScript examples: [js/examples/](js/examples/)
+- Python examples: [python/examples/](python/examples/)
+
+## License
 
 The Unlicense
 
-## Ссылки
+## Links
 
-- Исходный репозиторий: https://github.com/unidel2035/dronedoc2025
+- Repository: https://github.com/link-foundation/links-client
 - link-cli: https://github.com/link-foundation/link-cli
+- Links Notation: https://github.com/link-foundation/links-notation
