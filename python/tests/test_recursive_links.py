@@ -4,6 +4,23 @@ import os
 import unittest
 from pathlib import Path
 from links_client.api.recursive_links import RecursiveLinks
+from links_client.services.link_db_service import LinkDBService
+
+
+# Check if clink is available
+def check_clink_available():
+    """Check if clink command is available"""
+    try:
+        service = LinkDBService("data/test-check.links")
+        service.execute_query('(() ())', after=True)
+        return True
+    except RuntimeError as e:
+        if 'clink command not found' in str(e):
+            return False
+        raise
+
+
+clink_available = check_clink_available()
 
 
 class TestRecursiveLinksAPI(unittest.TestCase):
@@ -17,6 +34,10 @@ class TestRecursiveLinksAPI(unittest.TestCase):
         if cls.test_db_path.exists():
             cls.test_db_path.unlink()
 
+        # Print warning if clink not available
+        if not clink_available:
+            print('⚠️  clink not available - RecursiveLinks tests will be skipped')
+
     @classmethod
     def tearDownClass(cls):
         """Clean up test database"""
@@ -27,6 +48,7 @@ class TestRecursiveLinksAPI(unittest.TestCase):
         """Set up test instance"""
         self.recursive_links = RecursiveLinks(str(self.test_db_path))
 
+    @unittest.skipIf(not clink_available, "clink not available")
     def test_create_from_simple_nested_list(self):
         """Test creating links from simple nested list [[1, 2], [3, 4]]"""
         link_ids = self.recursive_links.create_from_nested_list([[1, 2], [3, 4]])
@@ -35,6 +57,7 @@ class TestRecursiveLinksAPI(unittest.TestCase):
         self.assertGreater(link_ids[0], 0)
         self.assertGreater(link_ids[1], 0)
 
+    @unittest.skipIf(not clink_available, "clink not available")
     def test_create_from_nested_list_multiple_elements(self):
         """Test creating links from nested list with multiple elements"""
         link_ids = self.recursive_links.create_from_nested_list([
@@ -45,6 +68,7 @@ class TestRecursiveLinksAPI(unittest.TestCase):
 
         self.assertEqual(len(link_ids), 3)
 
+    @unittest.skipIf(not clink_available, "clink not available")
     def test_create_from_deeply_nested_list(self):
         """Test handling deeply nested lists"""
         link_ids = self.recursive_links.create_from_nested_list([
@@ -53,11 +77,13 @@ class TestRecursiveLinksAPI(unittest.TestCase):
 
         self.assertGreater(len(link_ids), 0)
 
+    @unittest.skipIf(not clink_available, "clink not available")
     def test_create_from_invalid_list_item(self):
         """Test error for list items with less than 2 elements"""
         with self.assertRaises(ValueError):
             self.recursive_links.create_from_nested_list([[1]])
 
+    @unittest.skipIf(not clink_available, "clink not available")
     def test_create_from_nested_dict_simple(self):
         """Test creating links from nested dict with references"""
         ref_map = self.recursive_links.create_from_nested_dict({
@@ -66,6 +92,7 @@ class TestRecursiveLinksAPI(unittest.TestCase):
 
         self.assertGreater(ref_map["1"], 0)
 
+    @unittest.skipIf(not clink_available, "clink not available")
     def test_create_from_nested_dict_multiple_refs(self):
         """Test creating links from dict with multiple references"""
         ref_map = self.recursive_links.create_from_nested_dict({
@@ -76,6 +103,7 @@ class TestRecursiveLinksAPI(unittest.TestCase):
         self.assertGreater(ref_map["ref1"], 0)
         self.assertGreater(ref_map["ref2"], 0)
 
+    @unittest.skipIf(not clink_available, "clink not available")
     def test_create_from_nested_dict_with_nested_objects(self):
         """Test handling nested dicts within dicts"""
         ref_map = self.recursive_links.create_from_nested_dict({
@@ -85,6 +113,7 @@ class TestRecursiveLinksAPI(unittest.TestCase):
         self.assertGreater(ref_map["1"], 0)
         self.assertGreater(ref_map["2"], 0)
 
+    @unittest.skipIf(not clink_available, "clink not available")
     def test_read_as_nested_list(self):
         """Test reading links as nested list"""
         # Create some links first
@@ -99,6 +128,7 @@ class TestRecursiveLinksAPI(unittest.TestCase):
             any(isinstance(item, list) and len(item) == 2 for item in nested_list)
         )
 
+    @unittest.skipIf(not clink_available, "clink not available")
     def test_read_as_nested_list_with_restriction(self):
         """Test filtering links when restriction is provided"""
         link_ids = self.recursive_links.create_from_nested_list([[30, 31]])
@@ -188,6 +218,7 @@ class TestRecursiveLinksAPI(unittest.TestCase):
         self.assertIsNotNone(links)
         self.assertTrue(hasattr(links, "get_constants"))
 
+    @unittest.skipIf(not clink_available, "clink not available")
     def test_integration_with_ilinks(self):
         """Test that RecursiveLinks uses same database as underlying ILinks"""
         links = self.recursive_links.get_links()
