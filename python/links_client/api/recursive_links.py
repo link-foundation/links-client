@@ -216,36 +216,18 @@ class RecursiveLinks:
             logger.error(f"Failed to read as nested list: {error}")
             raise
 
-    def to_links_notation(self, nested_list: List[Any]) -> str:
+    def to_links_notation(self, input_data: Union[List[Any], Dict[str, Any]]) -> str:
         """
-        Convert nested list to Links notation string
-        [[1, 2], [3, 4]] -> "((1 2) (3 4))"
+        Convert nested list or dict to Links notation string
+        Universal function that handles both nested lists and dicts with references:
+        - [[1, 2], [3, 4]] -> "((1 2) (3 4))"
+        - { "1": [1, { "2": [5, 6] }, 3, 4] } -> "(1: 1 (2: 5 6) 3 4)"
 
         Args:
-            nested_list: Nested list structure
+            input_data: Nested list or dict structure
 
         Returns:
             Links notation string
-        """
-        def convert(item):
-            if isinstance(item, list):
-                inner = ' '.join(convert(el) for el in item)
-                return f"({inner})"
-            return str(item)
-
-        inner = ' '.join(convert(item) for item in nested_list)
-        return f"({inner})"
-
-    def to_links_notation_with_refs(self, nested_dict: Dict[str, Any]) -> str:
-        """
-        Convert nested dict with references to Links notation string
-        { "1": [1, { "2": [5, 6] }, 3, 4] } -> "(1: 1 (2: 5 6) 3 4)"
-
-        Args:
-            nested_dict: Nested dict structure
-
-        Returns:
-            Links notation string with references
         """
         def convert(item, ref_name=None):
             if isinstance(item, dict):
@@ -257,8 +239,19 @@ class RecursiveLinks:
                 return f"({ref_name}: {inner})" if ref_name else f"({inner})"
             return str(item)
 
-        parts = [convert(val, ref) for ref, val in nested_dict.items()]
-        return f"({' '.join(parts)})"
+        # Handle list input (original to_links_notation behavior)
+        if isinstance(input_data, list):
+            inner = ' '.join(convert(item) for item in input_data)
+            return f"({inner})"
+
+        # Handle dict input (original to_links_notation_with_refs behavior)
+        if isinstance(input_data, dict):
+            parts = [convert(val, ref) for ref, val in input_data.items()]
+            return f"({' '.join(parts)})"
+
+        # Fallback for primitive values
+        return str(input_data)
+
 
     def parse_links_notation(self, notation: str) -> List[Any]:
         """
