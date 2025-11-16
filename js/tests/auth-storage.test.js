@@ -1,5 +1,5 @@
 // test-auth-linkdb.js - Test AuthStorageService with link-cli database
-import AuthStorageService from '../src/services/AuthStorageService.js';
+import AuthStorageService from '../src/services/auth-storage-service.js';
 import logger from '../src/utils/logger.js';
 
 // Configure logger to show info level

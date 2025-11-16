@@ -10,7 +10,7 @@ This directory contains services for using [link-cli](https://github.com/link-fo
 
 ## Services
 
-### LinkDBService.js
+### link-db-service.js
 
 Low-level wrapper for link-cli command execution.
 
@@ -21,7 +21,7 @@ Low-level wrapper for link-cli command execution.
 **Usage**:
 
 ```javascript
-import LinkDBService from './LinkDBService.js';
+import LinkDBService from './link-db-service.js';
 
 const db = new LinkDBService('/path/to/database.links');
 
@@ -42,7 +42,7 @@ await db.updateLink(1, 150, 250);
 await db.deleteLink(1);
 ```
 
-### MenuStorageService.js
+### menu-storage-service.js
 
 High-level service for storing menu configurations using link-cli.
 
@@ -56,7 +56,7 @@ High-level service for storing menu configurations using link-cli.
 **Usage**:
 
 ```javascript
-import MenuStorageService from './MenuStorageService.js';
+import MenuStorageService from './menu-storage-service.js';
 
 const menuStorage = new MenuStorageService();
 
@@ -245,7 +245,7 @@ node experiments/test-linkdb-menu.js
 
 3. Services are ready to use!
 
-### AuthStorageService.js
+### auth-storage-service.js
 
 High-level service for storing authentication data using link-cli.
 
@@ -259,7 +259,7 @@ High-level service for storing authentication data using link-cli.
 **Usage**:
 
 ```javascript
-import AuthStorageService from './AuthStorageService.js';
+import AuthStorageService from './auth-storage-service.js';
 
 const authStorage = new AuthStorageService();
 

@@ -14,11 +14,11 @@ console.log('Testing logger imports...\n');
 
 const testModules = [
   { name: 'logger', path: '../src/utils/logger.js' },
-  { name: 'LinkDBService', path: '../src/services/LinkDBService.js' },
-  { name: 'AuthStorageService', path: '../src/services/AuthStorageService.js' },
-  { name: 'MenuStorageService', path: '../src/services/MenuStorageService.js' },
-  { name: 'menuConfigRoutes', path: '../src/api/menuConfigRoutes.js' },
-  { name: 'authDataRoutes', path: '../src/api/authDataRoutes.js' }
+  { name: 'LinkDBService', path: '../src/services/link-db-service.js' },
+  { name: 'AuthStorageService', path: '../src/services/auth-storage-service.js' },
+  { name: 'MenuStorageService', path: '../src/services/menu-storage-service.js' },
+  { name: 'menuConfigRoutes', path: '../src/api/menu-config-routes.js' },
+  { name: 'authDataRoutes', path: '../src/api/auth-data-routes.js' }
 ];
 
 let allPassed = true;

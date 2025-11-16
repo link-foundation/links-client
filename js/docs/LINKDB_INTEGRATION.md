@@ -90,8 +90,8 @@ backend/monolith/
 ├── src/
 │   ├── services/
 │   │   └── linkdb/
-│   │       ├── LinkDBService.js       # Low-level link-cli wrapper
-│   │       └── MenuStorageService.js  # High-level menu storage
+│   │       ├── link-db-service.js       # Low-level link-cli wrapper
+│   │       └── menu-storage-service.js  # High-level menu storage
 │   └── api/
 │       └── routes/
 │           ├── menuConfigLinkDB.js    # New link-cli based API routes
@@ -119,7 +119,7 @@ Low-level service for executing link-cli commands.
 **Example Usage**:
 
 ```javascript
-import LinkDBService from './services/LinkDBService.js';
+import LinkDBService from './services/link-db-service.js';
 
 const linkDB = new LinkDBService();
 
@@ -148,7 +148,7 @@ High-level service for menu storage with link-cli.
 **Example Usage**:
 
 ```javascript
-import MenuStorageService from './services/MenuStorageService.js';
+import MenuStorageService from './services/menu-storage-service.js';
 
 const menuStorage = new MenuStorageService();
 

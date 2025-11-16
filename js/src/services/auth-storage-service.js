@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
-import LinkDBService from './LinkDBService.js';
+import LinkDBService from './link-db-service.js';
 import logger from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
