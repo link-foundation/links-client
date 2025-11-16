@@ -124,8 +124,24 @@ class TestRecursiveLinksAPI(unittest.TestCase):
         notation = self.recursive_links.to_links_notation([[[1, 2], 3]])
         self.assertIn("(", notation)
 
+    def test_to_links_notation_with_dict_simple(self):
+        """Test converting nested dict with refs to Links notation using to_links_notation"""
+        notation = self.recursive_links.to_links_notation({
+            "1": [1, 2]
+        })
+        self.assertIn("1:", notation)
+        self.assertIn("(", notation)
+
+    def test_to_links_notation_with_dict_complex(self):
+        """Test converting complex nested dict to Links notation using to_links_notation"""
+        notation = self.recursive_links.to_links_notation({
+            "1": [1, {"2": [5, 6]}, 3, 4]
+        })
+        self.assertIn("1:", notation)
+        self.assertIn("2:", notation)
+
     def test_to_links_notation_with_refs_simple(self):
-        """Test converting nested dict with refs to Links notation"""
+        """Test converting nested dict with refs to Links notation using to_links_notation_with_refs (backward compatibility)"""
         notation = self.recursive_links.to_links_notation_with_refs({
             "1": [1, 2]
         })
@@ -133,7 +149,7 @@ class TestRecursiveLinksAPI(unittest.TestCase):
         self.assertIn("(", notation)
 
     def test_to_links_notation_with_refs_complex(self):
-        """Test converting complex nested dict to Links notation"""
+        """Test converting complex nested dict to Links notation using to_links_notation_with_refs (backward compatibility)"""
         notation = self.recursive_links.to_links_notation_with_refs({
             "1": [1, {"2": [5, 6]}, 3, 4]
         })

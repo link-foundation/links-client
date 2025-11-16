@@ -216,11 +216,13 @@ const nestedArray = await recursiveLinks.readAsNestedArray();
 nested_list = recursive_links.read_as_nested_list()
 ```
 
-#### `toLinksNotation(nestedArray)`
+#### `toLinksNotation(input)` / `to_links_notation(input_data)`
 
-Converts nested array/list to Links notation string.
+**Universal function** that converts nested arrays/lists OR objects/dicts to Links notation string.
 
-**Example:**
+**Examples:**
+
+Arrays/lists:
 ```javascript
 // JavaScript
 const notation = recursiveLinks.toLinksNotation([[1, 2], [3, 4]]);
@@ -233,14 +235,10 @@ notation = recursive_links.to_links_notation([[1, 2], [3, 4]])
 # Returns: "((1 2) (3 4))"
 ```
 
-#### `toLinksNotationWithRefs(nestedObject)` / `toLinksNotationWithRefs(nestedDict)`
-
-Converts nested object/dict with references to Links notation string.
-
-**Example:**
+Objects/dicts with references:
 ```javascript
 // JavaScript
-const notation = recursiveLinks.toLinksNotationWithRefs({
+const notation = recursiveLinks.toLinksNotation({
   "1": [1, { "2": [5, 6] }, 3, 4]
 });
 // Returns: "(1: 1 (2: 5 6) 3 4)"
@@ -248,11 +246,17 @@ const notation = recursiveLinks.toLinksNotationWithRefs({
 
 ```python
 # Python
-notation = recursive_links.to_links_notation_with_refs({
+notation = recursive_links.to_links_notation({
   "1": [1, { "2": [5, 6] }, 3, 4]
 })
 # Returns: "(1: 1 (2: 5 6) 3 4)"
 ```
+
+#### `toLinksNotationWithRefs(nestedObject)` / `to_links_notation_with_refs(nestedDict)`
+
+**Deprecated:** Use `toLinksNotation()` / `to_links_notation()` instead - it now handles both arrays/lists and objects/dicts.
+
+This method is kept for backward compatibility and internally delegates to `toLinksNotation()` / `to_links_notation()`.
 
 #### `parseLinksNotation(notation)`
 
