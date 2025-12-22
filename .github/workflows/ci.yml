@@ -54,6 +54,17 @@ jobs:
         with:
           node-version: '20.x'
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install clink
+        run: dotnet tool install --global clink
+
+      - name: Verify clink installation
+        run: clink --version
+
       - name: Install dependencies
         working-directory: ./js
         run: npm install
@@ -75,6 +86,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install clink
+        run: dotnet tool install --global clink
+
+      - name: Verify clink installation
+        run: clink --version
 
       - name: Install dependencies
         working-directory: ./python
