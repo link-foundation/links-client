@@ -74,6 +74,8 @@ jobs:
           mkdir -p ./js/data
           mkdir -p ./data/auth-data/users
           mkdir -p ./data/menu-items
+          mkdir -p ./js/backend/monolith/data/auth-data
+          mkdir -p ./js/tests
 
       - name: Run tests
         working-directory: ./js
