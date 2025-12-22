@@ -5,7 +5,7 @@
  * Issue #2271: Add tests and make LinkDB an alternative storage engine
  */
 
-import { describe, it, before, after } from 'test-anywhere';
+import { describe, it, before, after, beforeEach } from 'test-anywhere';
 import assert from 'node:assert';
 import LinkDBService from '../src/services/link-db-service.js';
 import path from 'path';
@@ -15,9 +15,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Test database path (separate from production)
+// Test database path (separate from production) - use unique name with timestamp
 const TEST_DB_DIR = path.join(__dirname, '..', 'data');
-const TEST_DB_FILE = path.join(TEST_DB_DIR, 'test-linkdb.links');
+const TEST_DB_FILE = path.join(TEST_DB_DIR, `test-linkdb-${process.pid}.links`);
 
 // Check if clink is available (will be set in before hook)
 let clinkAvailable = true;
@@ -160,6 +160,17 @@ Another line without pattern`;
   });
 
   describe('CRUD Operations', () => {
+    // Clear database before each CRUD test to ensure isolation
+    beforeEach(async function() {
+      if (clinkAvailable) {
+        try {
+          await service.clearDatabase();
+        } catch (error) {
+          // Ignore errors - database might be empty
+        }
+      }
+    });
+
     itIfClink('should create a link', async () => {
       const link = await service.createLink(100, 200);
 
@@ -229,6 +240,17 @@ Another line without pattern`;
   });
 
   describe('Menu Item Operations', () => {
+    // Clear database before each menu test to ensure isolation
+    beforeEach(async function() {
+      if (clinkAvailable) {
+        try {
+          await service.clearDatabase();
+        } catch (error) {
+          // Ignore errors - database might be empty
+        }
+      }
+    });
+
     itIfClink('should store menu item', async () => {
       const menuItem = {
         label: 'Test Menu',
@@ -345,6 +367,17 @@ Another line without pattern`;
   });
 
   describe('Performance and Edge Cases', () => {
+    // Clear database before each performance test to ensure isolation
+    beforeEach(async function() {
+      if (clinkAvailable) {
+        try {
+          await service.clearDatabase();
+        } catch (error) {
+          // Ignore errors - database might be empty
+        }
+      }
+    });
+
     itIfClink('should handle large numbers', async () => {
       const largeSource = 999999999;
       const largeTarget = 888888888;
@@ -363,14 +396,13 @@ Another line without pattern`;
     });
 
     itIfClink('should handle rapid sequential operations', async () => {
-      const operations = [];
+      const results = [];
 
-      // Perform 10 rapid creates
+      // Perform 10 sequential creates (clink doesn't support concurrent access)
       for (let i = 0; i < 10; i++) {
-        operations.push(service.createLink(i, i + 100));
+        const result = await service.createLink(i, i + 100);
+        results.push(result);
       }
-
-      const results = await Promise.all(operations);
 
       assert.strictEqual(results.length, 10);
       results.forEach((result, index) => {

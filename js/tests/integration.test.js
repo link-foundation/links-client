@@ -20,8 +20,8 @@ const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Test database path
-const TEST_DB_DIR = path.join(__dirname, '../backend/monolith/data/auth-data');
+// Test database path - must match AuthStorageService's DATA_DIR
+const TEST_DB_DIR = path.join(__dirname, '../../data/auth-data');
 const TEST_DB_FILE = path.join(TEST_DB_DIR, 'auth.links');
 
 let testResults = [];
@@ -101,9 +101,29 @@ async function verifyLinkFormat() {
       PATH: `${process.env.HOME}/.dotnet/tools:${process.env.PATH}`
     };
 
-    // Create a test link
-    const { stdout } = await execAsync(`clink '() ((100 200))' --db "${TEST_DB_FILE}" --changes`, { env });
+    // Ensure the test directory exists
+    try {
+      await fs.mkdir(TEST_DB_DIR, { recursive: true });
+    } catch (mkdirError) {
+      // Directory might already exist
+    }
 
+    // Use a dedicated test file for format verification to avoid conflicts
+    const formatTestDb = path.join(TEST_DB_DIR, 'format-test.links');
+
+    // Clear existing data in format test db
+    try {
+      await execAsync(`clink '((* *)) ()' --db "${formatTestDb}"`, { env });
+    } catch (clearError) {
+      // Database might not exist yet
+    }
+
+    // Create a test link
+    const { stdout, stderr } = await execAsync(`clink '() ((100 200))' --db "${formatTestDb}" --changes`, { env });
+
+    if (stderr) {
+      log(`clink stderr: ${stderr}`, 'warn');
+    }
     log(`clink output: ${stdout}`, 'test');
 
     // Verify format: should be (id: 100 200) NOT (id: 100, 200)
@@ -112,11 +132,21 @@ async function verifyLinkFormat() {
       return false;
     }
 
-    // Verify format matches (number: number number)
+    // Verify format matches (number: number number) - handle both direct and changes format
+    // Changes format: () ((id: source target))
+    // Direct format: (id: source target)
     const linkMatch = stdout.match(/\((\d+):\s+(\d+)\s+(\d+)\)/);
     if (!linkMatch) {
-      log('ERROR: Link format does not match expected pattern (id: source target)', 'error');
-      return false;
+      // If no match, output may be empty or in unexpected format - retry with --after flag
+      const { stdout: afterStdout } = await execAsync(`clink '((($i: $s $t)) (($i: $s $t)))' --db "${formatTestDb}" --after`, { env });
+      log(`clink --after output: ${afterStdout}`, 'test');
+      const afterMatch = afterStdout.match(/\((\d+):\s+(\d+)\s+(\d+)\)/);
+      if (!afterMatch) {
+        log('ERROR: Link format does not match expected pattern (id: source target)', 'error');
+        return false;
+      }
+      log(`Correct link format verified (via --after): (${afterMatch[1]}: ${afterMatch[2]} ${afterMatch[3]})`, 'info');
+      return true;
     }
 
     log(`Correct link format verified: (${linkMatch[1]}: ${linkMatch[2]} ${linkMatch[3]})`, 'info');

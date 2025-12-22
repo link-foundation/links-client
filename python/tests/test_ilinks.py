@@ -98,6 +98,8 @@ class TestILinksAPI(unittest.TestCase):
     @unittest.skipIf(not clink_available, "clink not available")
     def test_count_all_links(self):
         """Test counting all links"""
+        # First create a link to ensure count > 0
+        self.links.create([1001, 1002])
         count = self.links.count()
         self.assertGreater(count, 0)
 
