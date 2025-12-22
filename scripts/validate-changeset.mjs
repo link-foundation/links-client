@@ -47,7 +47,7 @@ try {
     );
     console.error(`::error::Expected format in ${changesetFile}:`);
     console.error('::error::---');
-    console.error("::error::'@unidel2035/links-client': patch");
+    console.error("::error::'@link-foundation/links-client': patch");
     console.error('::error::---');
     console.error('::error::');
     console.error('::error::Your description here');

@@ -274,7 +274,7 @@ parsed = recursive_links.parse_links_notation("((1 2) (3 4))")
 ### JavaScript
 
 ```javascript
-import { ILinks, RecursiveLinks } from '@unidel2035/links-client';
+import { ILinks, RecursiveLinks } from '@link-foundation/links-client';
 
 // Using flat ILinks API
 const links = new ILinks('./data/my.links');

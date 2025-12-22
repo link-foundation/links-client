@@ -28,7 +28,7 @@ npm install
 ```
 
 ```javascript
-import { LinkDBService } from '@unidel2035/links-client';
+import { LinkDBService } from '@link-foundation/links-client';
 
 const db = new LinkDBService('/path/to/database.links');
 

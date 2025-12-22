@@ -14,7 +14,7 @@ dotnet tool install --global clink
 ### Package Installation
 
 ```bash
-npm install @unidel2035/links-client
+npm install @link-foundation/links-client
 ```
 
 Or use GitHub directly:
@@ -28,7 +28,7 @@ npm install git+https://github.com/link-foundation/links-client.git
 ### Basic Usage
 
 ```javascript
-import { LinkDBService } from '@unidel2035/links-client';
+import { LinkDBService } from '@link-foundation/links-client';
 
 const db = new LinkDBService('/path/to/database.links');
 
@@ -46,7 +46,7 @@ await db.deleteLink(1);
 ### Menu Storage
 
 ```javascript
-import { MenuStorageService } from '@unidel2035/links-client';
+import { MenuStorageService } from '@link-foundation/links-client';
 
 const menuStorage = new MenuStorageService();
 
@@ -68,7 +68,7 @@ const retrievedMenu = await menuStorage.getMenuStructure(0);
 ### Authentication Storage
 
 ```javascript
-import { AuthStorageService } from '@unidel2035/links-client';
+import { AuthStorageService } from '@link-foundation/links-client';
 
 const authStorage = new AuthStorageService();
 
