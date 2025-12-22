@@ -69,6 +69,12 @@ jobs:
         working-directory: ./js
         run: npm install
 
+      - name: Create test data directories
+        run: |
+          mkdir -p ./js/data
+          mkdir -p ./data/auth-data/users
+          mkdir -p ./data/menu-items
+
       - name: Run tests
         working-directory: ./js
         run: npm test
@@ -103,6 +109,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
+
+      - name: Create test data directories
+        run: |
+          mkdir -p ./python/data
+          mkdir -p ./data/auth-data/users
+          mkdir -p ./data/menu-items
 
       - name: Run tests
         working-directory: ./python
