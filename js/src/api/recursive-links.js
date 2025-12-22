@@ -202,32 +202,15 @@ class RecursiveLinks {
   }
 
   /**
-   * Convert nested array to Links notation string
-   * [[1, 2], [3, 4]] -> "((1 2) (3 4))"
+   * Convert nested array or object to Links notation string
+   * Universal function that handles both nested arrays and objects with references:
+   * - [[1, 2], [3, 4]] -> "((1 2) (3 4))"
+   * - { "1": [1, { "2": [5, 6] }, 3, 4] } -> "(1: 1 (2: 5 6) 3 4)"
    *
-   * @param {Array} nestedArray - Nested array structure
+   * @param {Array|object} input - Nested array or object structure
    * @returns {string} - Links notation string
    */
-  toLinksNotation(nestedArray) {
-    const convert = (item) => {
-      if (Array.isArray(item)) {
-        const inner = item.map(convert).join(' ');
-        return `(${inner})`;
-      }
-      return String(item);
-    };
-
-    return `(${nestedArray.map(convert).join(' ')})`;
-  }
-
-  /**
-   * Convert nested object with references to Links notation string
-   * { "1": [1, { "2": [5, 6] }, 3, 4] } -> "(1: 1 (2: 5 6) 3 4)"
-   *
-   * @param {object} nestedObject - Nested object structure
-   * @returns {string} - Links notation string with references
-   */
-  toLinksNotationWithRefs(nestedObject) {
+  toLinksNotation(input) {
     const convert = (item, refName = null) => {
       if (typeof item === 'object' && !Array.isArray(item)) {
         // Nested object with its own references
@@ -241,9 +224,21 @@ class RecursiveLinks {
       return String(item);
     };
 
-    const parts = Object.entries(nestedObject).map(([ref, val]) => convert(val, ref));
-    return `(${parts.join(' ')})`;
+    // Handle array input (original toLinksNotation behavior)
+    if (Array.isArray(input)) {
+      return `(${input.map(item => convert(item)).join(' ')})`;
+    }
+
+    // Handle object input (original toLinksNotationWithRefs behavior)
+    if (typeof input === 'object' && input !== null) {
+      const parts = Object.entries(input).map(([ref, val]) => convert(val, ref));
+      return `(${parts.join(' ')})`;
+    }
+
+    // Fallback for primitive values
+    return String(input);
   }
+
 
   /**
    * Parse Links notation string to nested array

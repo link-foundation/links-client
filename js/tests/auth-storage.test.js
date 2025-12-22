@@ -1,17 +1,46 @@
 // test-auth-linkdb.js - Test AuthStorageService with link-cli database
 import AuthStorageService from '../src/services/auth-storage-service.js';
 import logger from '../src/utils/logger.js';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 // Configure logger to show info level
 logger.level = 'info';
 
-const authStorage = new AuthStorageService();
+/**
+ * Check if clink is available
+ */
+async function isClinkAvailable() {
+  try {
+    const env = {
+      ...process.env,
+      PATH: `${process.env.HOME}/.dotnet/tools:${process.env.PATH}`
+    };
+    await execAsync('clink --version', { env });
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 
 /**
  * Test suite for AuthStorageService
  */
 async function runTests() {
   console.log('=== Testing AuthStorageService with Link-CLI ===\n');
+
+  // Check if clink is available
+  const clinkAvailable = await isClinkAvailable();
+  if (!clinkAvailable) {
+    console.log('⚠️  clink is not installed - skipping tests');
+    console.log('   Install with: dotnet tool install --global clink');
+    console.log('\n✓ Test skipped (clink not available)');
+    process.exit(0);
+  }
+
+  const authStorage = new AuthStorageService();
 
   let testUser1, testUser2, testToken1, testToken2;
 

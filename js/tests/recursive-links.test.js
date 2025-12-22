@@ -1,12 +1,30 @@
 // Test file for RecursiveLinks API
-import { describe, it, before, after } from 'node:test';
+import { describe, it, before, after } from 'test-anywhere';
 import assert from 'node:assert';
 import RecursiveLinks from '../src/api/recursive-links.js';
+import LinkDBService from '../src/services/link-db-service.js';
 import fs from 'fs';
 import path from 'path';
 
 // Test database path
 const TEST_DB_PATH = path.join(process.cwd(), 'data', 'test-recursive.links');
+
+// Check if clink is available (will be set in before hook)
+let clinkAvailable = true;
+let clinkCheckDone = false;
+
+// Helper function to conditionally skip tests at runtime
+const itIfClink = (name, fn) => {
+  return it(name, async function() {
+    // Skip test if clink not available
+    if (!clinkAvailable) {
+      this.skip();
+      return;
+    }
+    // Run the actual test
+    await fn.call(this);
+  });
+};
 
 describe('RecursiveLinks API', () => {
   let recursiveLinks;
@@ -18,6 +36,21 @@ describe('RecursiveLinks API', () => {
     }
 
     recursiveLinks = new RecursiveLinks(TEST_DB_PATH);
+
+    // Check if clink is available
+    try {
+      const service = new LinkDBService(TEST_DB_PATH);
+      await service.executeQuery('(() ())', { after: true });
+      clinkAvailable = true;
+    } catch (error) {
+      if (error.message.includes('clink command not found')) {
+        clinkAvailable = false;
+        console.warn('⚠️  clink not available - RecursiveLinks tests will be skipped');
+      } else {
+        throw error;
+      }
+    }
+    clinkCheckDone = true;
   });
 
   after(async () => {
@@ -28,7 +61,7 @@ describe('RecursiveLinks API', () => {
   });
 
   describe('Nested Array Creation', () => {
-    it('should create links from simple nested array [[1, 2], [3, 4]]', async () => {
+    itIfClink('should create links from simple nested array [[1, 2], [3, 4]]', async () => {
       const linkIds = await recursiveLinks.createFromNestedArray([[1, 2], [3, 4]]);
 
       assert.strictEqual(linkIds.length, 2, 'Should create 2 links');
@@ -36,7 +69,7 @@ describe('RecursiveLinks API', () => {
       assert.ok(linkIds[1] > 0, 'Second link ID should be positive');
     });
 
-    it('should create links from nested array with multiple elements', async () => {
+    itIfClink('should create links from nested array with multiple elements', async () => {
       const linkIds = await recursiveLinks.createFromNestedArray([
         [5, 6],
         [7, 8],
@@ -46,7 +79,7 @@ describe('RecursiveLinks API', () => {
       assert.strictEqual(linkIds.length, 3, 'Should create 3 links');
     });
 
-    it('should handle deeply nested arrays', async () => {
+    itIfClink('should handle deeply nested arrays', async () => {
       const linkIds = await recursiveLinks.createFromNestedArray([
         [[11, 12], 13]
       ]);
@@ -54,7 +87,7 @@ describe('RecursiveLinks API', () => {
       assert.ok(linkIds.length > 0, 'Should create links from deeply nested array');
     });
 
-    it('should throw error for array items with less than 2 elements', async () => {
+    itIfClink('should throw error for array items with less than 2 elements', async () => {
       await assert.rejects(
         async () => await recursiveLinks.createFromNestedArray([[1]]),
         /Array items must have at least 2 elements/
@@ -63,7 +96,7 @@ describe('RecursiveLinks API', () => {
   });
 
   describe('Nested Object Creation', () => {
-    it('should create links from nested object with references', async () => {
+    itIfClink('should create links from nested object with references', async () => {
       const refMap = await recursiveLinks.createFromNestedObject({
         "1": [1, 2]
       });
@@ -71,7 +104,7 @@ describe('RecursiveLinks API', () => {
       assert.ok(refMap["1"] > 0, 'Should create link with reference "1"');
     });
 
-    it('should create links from complex nested object', async () => {
+    itIfClink('should create links from complex nested object', async () => {
       const refMap = await recursiveLinks.createFromNestedObject({
         "ref1": [5, 6],
         "ref2": [7, 8]
@@ -81,7 +114,7 @@ describe('RecursiveLinks API', () => {
       assert.ok(refMap["ref2"] > 0, 'Should create link with reference "ref2"');
     });
 
-    it('should handle nested objects within objects', async () => {
+    itIfClink('should handle nested objects within objects', async () => {
       const refMap = await recursiveLinks.createFromNestedObject({
         "1": [1, { "2": [5, 6] }, 3, 4]
       });
@@ -92,7 +125,7 @@ describe('RecursiveLinks API', () => {
   });
 
   describe('Read as Nested Array', () => {
-    it('should read links as nested array', async () => {
+    itIfClink('should read links as nested array', async () => {
       // Create some links first
       await recursiveLinks.createFromNestedArray([[20, 21], [22, 23]]);
 
@@ -106,7 +139,7 @@ describe('RecursiveLinks API', () => {
       ), 'Should have [source, target] arrays');
     });
 
-    it('should filter links when restriction is provided', async () => {
+    itIfClink('should filter links when restriction is provided', async () => {
       const linkIds = await recursiveLinks.createFromNestedArray([[30, 31]]);
       const firstLinkId = linkIds[0];
 
@@ -133,21 +166,22 @@ describe('RecursiveLinks API', () => {
       assert.ok(notation.includes('('), 'Should contain parentheses');
     });
 
-    it('should convert nested object with refs to Links notation', () => {
-      const notation = recursiveLinks.toLinksNotationWithRefs({
+    it('should convert nested object with refs to Links notation using toLinksNotation', () => {
+      const notation = recursiveLinks.toLinksNotation({
         "1": [1, 2]
       });
       assert.ok(notation.includes('1:'), 'Should include reference label');
       assert.ok(notation.includes('('), 'Should contain parentheses');
     });
 
-    it('should convert complex nested object to Links notation', () => {
-      const notation = recursiveLinks.toLinksNotationWithRefs({
+    it('should convert complex nested object to Links notation using toLinksNotation', () => {
+      const notation = recursiveLinks.toLinksNotation({
         "1": [1, { "2": [5, 6] }, 3, 4]
       });
       assert.ok(notation.includes('1:'), 'Should include reference label "1"');
       assert.ok(notation.includes('2:'), 'Should include reference label "2"');
     });
+
   });
 
   describe('Parse Links Notation', () => {
@@ -202,7 +236,7 @@ describe('RecursiveLinks API', () => {
       assert.ok(links.getConstants, 'Should have ILinks methods');
     });
 
-    it('should use same database as underlying ILinks', async () => {
+    itIfClink('should use same database as underlying ILinks', async () => {
       const links = recursiveLinks.getLinks();
       const countBefore = await links.count();
 
