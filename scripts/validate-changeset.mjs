@@ -40,14 +40,14 @@ try {
   const content = readFileSync(changesetFile, 'utf-8');
 
   // Check if changeset has a valid type (major, minor, or patch)
-  const versionTypeRegex = /^['"]@unidel2035\/links-client['"]:\s+(major|minor|patch)/m;
+  const versionTypeRegex = /^['"]@link-foundation\/links-client['"]:\s+(major|minor|patch)/m;
   if (!versionTypeRegex.test(content)) {
     console.error(
       '::error::Changeset must specify a version type: major, minor, or patch'
     );
     console.error(`::error::Expected format in ${changesetFile}:`);
     console.error('::error::---');
-    console.error("::error::'@unidel2035/links-client': patch");
+    console.error("::error::'@link-foundation/links-client': patch");
     console.error('::error::---');
     console.error('::error::');
     console.error('::error::Your description here');

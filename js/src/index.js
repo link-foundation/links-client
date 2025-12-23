@@ -1,4 +1,4 @@
-// Main export file for @unidel2035/links-client
+// Main export file for @link-foundation/links-client
 
 export { default as LinkDBService } from './services/link-db-service.js';
 export { default as AuthStorageService } from './services/auth-storage-service.js';

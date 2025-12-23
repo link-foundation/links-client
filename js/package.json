@@ -1,5 +1,5 @@
 {
-  "name": "@unidel2035/links-client",
+  "name": "@link-foundation/links-client",
   "version": "1.0.0",
   "description": "Node.js client library for link-cli (Links Theory database)",
   "main": "src/index.js",

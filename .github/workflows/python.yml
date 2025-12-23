@@ -1,0 +1,278 @@
+name: Python CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      description:
+        description: 'Release description (optional)'
+        required: false
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Test Python
+  test-python:
+    name: Test Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install clink
+        run: dotnet tool install --global clink
+
+      - name: Verify clink installation
+        run: clink --version
+
+      - name: Install dependencies
+        working-directory: ./python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Create test data directories
+        run: |
+          mkdir -p ./python/data
+          mkdir -p ./data/auth-data/users
+          mkdir -p ./data/menu-items
+
+      - name: Run tests
+        working-directory: ./python
+        run: pytest
+
+  # Build package - only runs if tests pass
+  build:
+    name: Build Package
+    runs-on: ubuntu-latest
+    needs: [test-python]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build package
+        working-directory: ./python
+        run: python -m build
+
+      - name: Check package
+        working-directory: ./python
+        run: twine check dist/*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-dist
+          path: python/dist/
+
+  # Auto release on push to main (if version changed)
+  auto-release:
+    name: Auto Release
+    needs: [test-python, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Check if version changed
+        id: version_check
+        run: |
+          # Get current version from pyproject.toml
+          CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' python/pyproject.toml)
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+          # Check if tag exists
+          if git rev-parse "python-v$CURRENT_VERSION" >/dev/null 2>&1; then
+            echo "Tag python-v$CURRENT_VERSION already exists, skipping release"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          else
+            echo "New version detected: $CURRENT_VERSION"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download artifacts
+        if: steps.version_check.outputs.should_release == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: python/dist/
+
+      - name: Publish to PyPI
+        if: steps.version_check.outputs.should_release == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: python/dist/
+
+      - name: Create GitHub Release
+        if: steps.version_check.outputs.should_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version_check.outputs.current_version }}"
+          TAG="python-v$VERSION"
+
+          echo "Creating GitHub release for $TAG..."
+
+          # Create release
+          gh release create "$TAG" \
+            --title "Python $VERSION" \
+            --notes "Python package release $VERSION" \
+            --repo ${{ github.repository }}
+
+          echo "✅ Created GitHub release: $TAG"
+
+  # Manual release via workflow_dispatch
+  manual-release:
+    name: Manual Release
+    needs: [test-python, build]
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine bump2version
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        id: version
+        working-directory: ./python
+        run: |
+          # Get current version
+          OLD_VERSION=$(grep -Po '(?<=^version = ")[^"]*' pyproject.toml)
+          echo "Current version: $OLD_VERSION"
+
+          # Parse version components
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$OLD_VERSION"
+
+          # Bump based on type
+          case "${{ github.event.inputs.bump_type }}" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "New version: $NEW_VERSION"
+
+          # Update version in pyproject.toml
+          sed -i "s/^version = \"$OLD_VERSION\"/version = \"$NEW_VERSION\"/" pyproject.toml
+
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit version bump
+        id: commit
+        run: |
+          git add python/pyproject.toml
+          git commit -m "Python ${{ steps.version.outputs.new_version }}" \
+                     -m "" \
+                     -m "${{ github.event.inputs.description || 'Manual release' }}" \
+                     -m "" \
+                     -m "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+
+          git push origin main
+          echo "version_committed=true" >> $GITHUB_OUTPUT
+
+      - name: Build package
+        if: steps.commit.outputs.version_committed == 'true'
+        working-directory: ./python
+        run: python -m build
+
+      - name: Check package
+        if: steps.commit.outputs.version_committed == 'true'
+        working-directory: ./python
+        run: twine check dist/*
+
+      - name: Publish to PyPI
+        if: steps.commit.outputs.version_committed == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: python/dist/
+
+      - name: Create GitHub Release
+        if: steps.commit.outputs.version_committed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.new_version }}"
+          TAG="python-v$VERSION"
+
+          gh release create "$TAG" \
+            --title "Python $VERSION" \
+            --notes "${{ github.event.inputs.description || 'Manual release' }}" \
+            --repo ${{ github.repository }}
+
+          echo "✅ Created GitHub release: $TAG"
