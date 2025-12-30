@@ -132,7 +132,7 @@ jobs:
         id: check_changesets
         run: |
           # Count changeset files (excluding README.md and config.json)
-          CHANGESET_COUNT=$(find .changeset -name "*.md" ! -name "README.md" | wc -l)
+          CHANGESET_COUNT=$(find js/.changeset -name "*.md" ! -name "README.md" | wc -l)
           echo "Found $CHANGESET_COUNT changeset file(s)"
           echo "has_changesets=$([[ $CHANGESET_COUNT -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
@@ -334,7 +334,7 @@ jobs:
       - name: Create changeset file
         run: |
           CHANGESET_ID=$(date +%s | md5sum | head -c 8)
-          CHANGESET_FILE=".changeset/${CHANGESET_ID}.md"
+          CHANGESET_FILE="js/.changeset/${CHANGESET_ID}.md"
 
           cat > "$CHANGESET_FILE" << EOF
           ---
