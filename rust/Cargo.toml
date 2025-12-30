@@ -1,0 +1,47 @@
+[package]
+name = "links-client"
+version = "1.0.0"
+edition = "2021"
+description = "Rust client library for link-cli (Links Theory database)"
+readme = "README.md"
+license = "Unlicense"
+authors = ["DronDoc Team"]
+keywords = ["link-cli", "links-theory", "database", "associative", "clink"]
+categories = ["database", "api-bindings"]
+repository = "https://github.com/link-foundation/links-client"
+documentation = "https://github.com/link-foundation/links-client"
+rust-version = "1.70"
+
+[lib]
+name = "links_client"
+path = "src/lib.rs"
+
+[dependencies]
+tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "process"] }
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+regex-lite = "0.1"
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.0"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+
+# Allow some common patterns
+module_name_repetitions = "allow"
+too_many_lines = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
