@@ -7,13 +7,14 @@
 //!
 //! ```no_run
 //! use links_client::{ILinks, LinkConstants};
+//! use links_client::api::ilinks::LinkChange;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let links = ILinks::new(None)?;
 //!
 //!     // Create a link
-//!     let link_id = links.create(&[1, 2], None).await?;
+//!     let link_id = links.create(&[1, 2], None::<fn(LinkChange)>).await?;
 //!     println!("Created link: {}", link_id);
 //!
 //!     // Count all links

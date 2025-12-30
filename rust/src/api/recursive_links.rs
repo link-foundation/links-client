@@ -1,6 +1,8 @@
 //! RecursiveLinks - Recursive API for working with hierarchical link structures
 
+use std::future::Future;
 use std::path::PathBuf;
+use std::pin::Pin;
 use thiserror::Error;
 use tracing::debug;
 
@@ -83,36 +85,38 @@ impl RecursiveLinks {
 
         match link {
             Some(link) => {
-                let node = self.build_tree_recursive(link, 0).await?;
+                let node = self.build_tree_impl(link, 0).await?;
                 Ok(Some(node))
             }
             None => Ok(None),
         }
     }
 
-    /// Recursively build a tree node
-    async fn build_tree_recursive(
-        &self,
+    /// Recursively build a tree node (using Box::pin for async recursion)
+    fn build_tree_impl<'a>(
+        &'a self,
         link: Link,
         depth: usize,
-    ) -> Result<LinkNode, RecursiveLinksError> {
-        if depth >= self.max_depth {
-            return Err(RecursiveLinksError::MaxDepthExceeded);
-        }
+    ) -> Pin<Box<dyn Future<Output = Result<LinkNode, RecursiveLinksError>> + Send + 'a>> {
+        Box::pin(async move {
+            if depth >= self.max_depth {
+                return Err(RecursiveLinksError::MaxDepthExceeded);
+            }
 
-        debug!("Building tree node for link {} at depth {}", link.id, depth);
+            debug!("Building tree node for link {} at depth {}", link.id, depth);
 
-        // Get children (links where this link's id is the source)
-        let children_links = self.get_children(link.id).await?;
+            // Get children (links where this link's id is the source)
+            let children_links = self.get_children(link.id).await?;
 
-        let mut children = Vec::new();
-        for child_link in children_links {
-            // Recursively build children
-            let child_node = self.build_tree_recursive(child_link, depth + 1).await?;
-            children.push(child_node);
-        }
+            let mut children = Vec::new();
+            for child_link in children_links {
+                // Recursively build children
+                let child_node = self.build_tree_impl(child_link, depth + 1).await?;
+                children.push(child_node);
+            }
 
-        Ok(LinkNode { link, children })
+            Ok(LinkNode { link, children })
+        })
     }
 
     /// Create a link
@@ -131,15 +135,28 @@ impl RecursiveLinks {
         recursive: bool,
     ) -> Result<bool, RecursiveLinksError> {
         if recursive {
+            self.delete_link_impl(id).await?;
+        } else {
+            self.db.delete_link(id).await?;
+        }
+        Ok(true)
+    }
+
+    /// Recursively delete a link and its children (using Box::pin for async recursion)
+    fn delete_link_impl<'a>(
+        &'a self,
+        id: u64,
+    ) -> Pin<Box<dyn Future<Output = Result<(), RecursiveLinksError>> + Send + 'a>> {
+        Box::pin(async move {
             // First delete all children
             let children = self.get_children(id).await?;
             for child in children {
-                self.delete_link(child.id, true).await?;
+                self.delete_link_impl(child.id).await?;
             }
-        }
 
-        self.db.delete_link(id).await?;
-        Ok(true)
+            self.db.delete_link(id).await?;
+            Ok(())
+        })
     }
 
     /// Count all links in a tree starting from the given root
@@ -152,7 +169,7 @@ impl RecursiveLinks {
     }
 
     /// Recursively count nodes in a tree
-    fn count_nodes(&self, node: &LinkNode) -> usize {
+    pub fn count_nodes(&self, node: &LinkNode) -> usize {
         let mut count = 1; // Count this node
         for child in &node.children {
             count += self.count_nodes(child);

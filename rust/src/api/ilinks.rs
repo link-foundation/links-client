@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 use thiserror::Error;
-use tracing::{debug, error};
+use tracing::debug;
 
 use crate::services::link_db_service::{Link, LinkDBError, LinkDBService};
 

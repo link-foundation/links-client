@@ -1,6 +1,7 @@
 //! Basic usage example for the Links Client library
 
 use links_client::{ILinks, LinkConstants};
+use links_client::services::link_db_service::Link;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -44,7 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Iterate over all links
     println!("\nIterating over all links:");
     links
-        .each(None, Some(|link| {
+        .each(None, Some(|link: &Link| {
             println!("  Link {}: {} -> {}", link.id, link.source, link.target);
             LinkConstants::Continue
         }))
@@ -58,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Iterate again to see the change
     println!("\nLinks after update:");
     links
-        .each(None, Some(|link| {
+        .each(None, Some(|link: &Link| {
             println!("  Link {}: {} -> {}", link.id, link.source, link.target);
             LinkConstants::Continue
         }))
