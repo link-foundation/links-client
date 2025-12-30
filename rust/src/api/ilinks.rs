@@ -307,9 +307,21 @@ mod tests {
     fn test_filter_links() {
         let links = ILinks::new(None).unwrap();
         let all_links = vec![
-            Link { id: 1, source: 2, target: 3 },
-            Link { id: 2, source: 4, target: 5 },
-            Link { id: 3, source: 2, target: 6 },
+            Link {
+                id: 1,
+                source: 2,
+                target: 3,
+            },
+            Link {
+                id: 2,
+                source: 4,
+                target: 5,
+            },
+            Link {
+                id: 3,
+                source: 2,
+                target: 6,
+            },
         ];
 
         // Filter by ID

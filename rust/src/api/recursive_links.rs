@@ -66,13 +66,19 @@ impl RecursiveLinks {
     /// Get links where the given link is the source
     pub async fn get_children(&self, parent_id: u64) -> Result<Vec<Link>, RecursiveLinksError> {
         let all_links = self.db.read_all_links().await?;
-        Ok(all_links.into_iter().filter(|l| l.source == parent_id).collect())
+        Ok(all_links
+            .into_iter()
+            .filter(|l| l.source == parent_id)
+            .collect())
     }
 
     /// Get links where the given link is the target
     pub async fn get_parents(&self, child_id: u64) -> Result<Vec<Link>, RecursiveLinksError> {
         let all_links = self.db.read_all_links().await?;
-        Ok(all_links.into_iter().filter(|l| l.target == child_id).collect())
+        Ok(all_links
+            .into_iter()
+            .filter(|l| l.target == child_id)
+            .collect())
     }
 
     /// Build a tree starting from the given root link
@@ -120,20 +126,12 @@ impl RecursiveLinks {
     }
 
     /// Create a link
-    pub async fn create_link(
-        &self,
-        source: u64,
-        target: u64,
-    ) -> Result<Link, RecursiveLinksError> {
+    pub async fn create_link(&self, source: u64, target: u64) -> Result<Link, RecursiveLinksError> {
         Ok(self.db.create_link(source, target).await?)
     }
 
     /// Delete a link and optionally all its children
-    pub async fn delete_link(
-        &self,
-        id: u64,
-        recursive: bool,
-    ) -> Result<bool, RecursiveLinksError> {
+    pub async fn delete_link(&self, id: u64, recursive: bool) -> Result<bool, RecursiveLinksError> {
         if recursive {
             self.delete_link_impl(id).await?;
         } else {
@@ -209,20 +207,34 @@ mod tests {
         let links = RecursiveLinks::new(None);
 
         let tree = LinkNode {
-            link: Link { id: 1, source: 0, target: 0 },
+            link: Link {
+                id: 1,
+                source: 0,
+                target: 0,
+            },
             children: vec![
                 LinkNode {
-                    link: Link { id: 2, source: 1, target: 0 },
+                    link: Link {
+                        id: 2,
+                        source: 1,
+                        target: 0,
+                    },
                     children: vec![],
                 },
                 LinkNode {
-                    link: Link { id: 3, source: 1, target: 0 },
-                    children: vec![
-                        LinkNode {
-                            link: Link { id: 4, source: 3, target: 0 },
-                            children: vec![],
+                    link: Link {
+                        id: 3,
+                        source: 1,
+                        target: 0,
+                    },
+                    children: vec![LinkNode {
+                        link: Link {
+                            id: 4,
+                            source: 3,
+                            target: 0,
                         },
-                    ],
+                        children: vec![],
+                    }],
                 },
             ],
         };
@@ -235,13 +247,19 @@ mod tests {
         let links = RecursiveLinks::new(None);
 
         let tree = LinkNode {
-            link: Link { id: 1, source: 0, target: 0 },
-            children: vec![
-                LinkNode {
-                    link: Link { id: 2, source: 1, target: 0 },
-                    children: vec![],
+            link: Link {
+                id: 1,
+                source: 0,
+                target: 0,
+            },
+            children: vec![LinkNode {
+                link: Link {
+                    id: 2,
+                    source: 1,
+                    target: 0,
                 },
-            ],
+                children: vec![],
+            }],
         };
 
         let flattened = links.flatten_tree(&tree);

@@ -3,8 +3,8 @@
 use std::env;
 use std::path::PathBuf;
 use std::process::Stdio;
-use tokio::process::Command;
 use thiserror::Error;
+use tokio::process::Command;
 use tracing::{debug, error, warn};
 
 /// Errors that can occur when using LinkDBService
@@ -72,7 +72,11 @@ impl LinkDBService {
         after: bool,
         trace: bool,
     ) -> Result<String, LinkDBError> {
-        let mut args = vec![query.to_string(), "--db".to_string(), self.db_path.to_string_lossy().to_string()];
+        let mut args = vec![
+            query.to_string(),
+            "--db".to_string(),
+            self.db_path.to_string_lossy().to_string(),
+        ];
 
         if before {
             args.push("--before".to_string());
@@ -169,7 +173,9 @@ impl LinkDBService {
     /// * `target` - Target link ID
     pub async fn create_link(&self, source: u64, target: u64) -> Result<Link, LinkDBError> {
         let query = format!("() (({} {}))", source, target);
-        let output = self.execute_query(&query, false, true, false, false).await?;
+        let output = self
+            .execute_query(&query, false, true, false, false)
+            .await?;
 
         let re = regex_lite::Regex::new(r"\((\d+):\s+(\d+)\s+(\d+)\)").unwrap();
         if let Some(caps) = re.captures(&output) {
@@ -184,7 +190,9 @@ impl LinkDBService {
             }
         }
 
-        Err(LinkDBError::ParseError("Failed to parse created link".to_string()))
+        Err(LinkDBError::ParseError(
+            "Failed to parse created link".to_string(),
+        ))
     }
 
     /// Read all links from database
@@ -197,7 +205,9 @@ impl LinkDBService {
     /// Read a specific link by ID
     pub async fn read_link(&self, id: u64) -> Result<Option<Link>, LinkDBError> {
         let query = format!("((({}:$s $t)) (({}:$s $t)))", id, id);
-        let output = self.execute_query(&query, false, false, true, false).await?;
+        let output = self
+            .execute_query(&query, false, false, true, false)
+            .await?;
         let links = self.parse_links(&output);
         Ok(links.into_iter().next())
     }
@@ -215,8 +225,12 @@ impl LinkDBService {
         new_source: u64,
         new_target: u64,
     ) -> Result<Link, LinkDBError> {
-        let query = format!("((({}:$s $t)) (({}: {} {})))", id, id, new_source, new_target);
-        self.execute_query(&query, false, true, false, false).await?;
+        let query = format!(
+            "((({}:$s $t)) (({}: {} {})))",
+            id, id, new_source, new_target
+        );
+        self.execute_query(&query, false, true, false, false)
+            .await?;
 
         Ok(Link {
             id,
@@ -228,7 +242,8 @@ impl LinkDBService {
     /// Delete a link
     pub async fn delete_link(&self, id: u64) -> Result<bool, LinkDBError> {
         let query = format!("((({}:$s $t)) ())", id);
-        self.execute_query(&query, false, true, false, false).await?;
+        self.execute_query(&query, false, true, false, false)
+            .await?;
         Ok(true)
     }
 
@@ -246,7 +261,10 @@ impl LinkDBService {
     /// Get all menu items
     pub async fn get_all_menu_items(&self) -> Result<Vec<Link>, LinkDBError> {
         let all_links = self.read_all_links().await?;
-        Ok(all_links.into_iter().filter(|link| link.target == 1000).collect())
+        Ok(all_links
+            .into_iter()
+            .filter(|link| link.target == 1000)
+            .collect())
     }
 
     /// Delete menu item
@@ -276,8 +294,22 @@ mod tests {
         let links = service.parse_links(output);
 
         assert_eq!(links.len(), 2);
-        assert_eq!(links[0], Link { id: 1, source: 2, target: 3 });
-        assert_eq!(links[1], Link { id: 4, source: 5, target: 6 });
+        assert_eq!(
+            links[0],
+            Link {
+                id: 1,
+                source: 2,
+                target: 3
+            }
+        );
+        assert_eq!(
+            links[1],
+            Link {
+                id: 4,
+                source: 5,
+                target: 6
+            }
+        );
     }
 
     #[test]

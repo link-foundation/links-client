@@ -31,6 +31,6 @@ pub mod utils;
 
 pub use api::ilinks::{ILinks, LinkConstants};
 pub use api::recursive_links::RecursiveLinks;
-pub use services::link_db_service::LinkDBService;
 pub use services::auth_storage_service::AuthStorageService;
+pub use services::link_db_service::LinkDBService;
 pub use services::menu_storage_service::MenuStorageService;

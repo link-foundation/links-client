@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use thiserror::Error;
 use tracing::{debug, error};
 
-use super::link_db_service::{LinkDBService, LinkDBError};
+use super::link_db_service::{LinkDBError, LinkDBService};
 
 /// Errors that can occur when using MenuStorageService
 #[derive(Error, Debug)]

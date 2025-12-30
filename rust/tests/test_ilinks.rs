@@ -1,7 +1,7 @@
 //! Tests for the ILinks API
 
-use links_client::{ILinks, LinkConstants};
 use links_client::services::link_db_service::Link;
+use links_client::{ILinks, LinkConstants};
 
 #[test]
 fn test_ilinks_creation() {
@@ -59,10 +59,13 @@ async fn test_each_with_handler() {
 
     let mut count = 0;
     let result = links
-        .each(None, Some(|_link: &Link| {
-            count += 1;
-            LinkConstants::Continue
-        }))
+        .each(
+            None,
+            Some(|_link: &Link| {
+                count += 1;
+                LinkConstants::Continue
+            }),
+        )
         .await;
 
     assert!(result.is_ok());
@@ -79,14 +82,17 @@ async fn test_each_with_break() {
 
     let mut visited = 0;
     let result = links
-        .each(None, Some(|_link: &Link| {
-            visited += 1;
-            if visited >= 1 {
-                LinkConstants::Break
-            } else {
-                LinkConstants::Continue
-            }
-        }))
+        .each(
+            None,
+            Some(|_link: &Link| {
+                visited += 1;
+                if visited >= 1 {
+                    LinkConstants::Break
+                } else {
+                    LinkConstants::Continue
+                }
+            }),
+        )
         .await
         .unwrap();
 

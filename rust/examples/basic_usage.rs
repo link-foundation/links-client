@@ -1,7 +1,7 @@
 //! Basic usage example for the Links Client library
 
-use links_client::{ILinks, LinkConstants};
 use links_client::services::link_db_service::Link;
+use links_client::{ILinks, LinkConstants};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -45,24 +45,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Iterate over all links
     println!("\nIterating over all links:");
     links
-        .each(None, Some(|link: &Link| {
-            println!("  Link {}: {} -> {}", link.id, link.source, link.target);
-            LinkConstants::Continue
-        }))
+        .each(
+            None,
+            Some(|link: &Link| {
+                println!("  Link {}: {} -> {}", link.id, link.source, link.target);
+                LinkConstants::Continue
+            }),
+        )
         .await?;
 
     // Update the link
     println!("\nUpdating link to (source: 10, target: 20)...");
-    links.update(Some(&[link_id]), &[10, 20], None::<fn(_)>).await?;
+    links
+        .update(Some(&[link_id]), &[10, 20], None::<fn(_)>)
+        .await?;
     println!("Link updated");
 
     // Iterate again to see the change
     println!("\nLinks after update:");
     links
-        .each(None, Some(|link: &Link| {
-            println!("  Link {}: {} -> {}", link.id, link.source, link.target);
-            LinkConstants::Continue
-        }))
+        .each(
+            None,
+            Some(|link: &Link| {
+                println!("  Link {}: {} -> {}", link.id, link.source, link.target);
+                LinkConstants::Continue
+            }),
+        )
         .await?;
 
     // Delete the link
