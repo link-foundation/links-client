@@ -25,6 +25,16 @@
 //! }
 //! ```
 
+// Allow some pedantic clippy lints that are too strict for this crate
+#![allow(clippy::fn_params_excessive_bools)]
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::use_self)]
+#![allow(clippy::doc_markdown)]
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::missing_panics_doc)]
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::uninlined_format_args)]
+
 pub mod api;
 pub mod services;
 pub mod utils;

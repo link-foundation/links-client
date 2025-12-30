@@ -1,4 +1,4 @@
-//! RecursiveLinks - Recursive API for working with hierarchical link structures
+//! `RecursiveLinks` - Recursive API for working with hierarchical link structures
 
 use std::future::Future;
 use std::path::PathBuf;
@@ -8,7 +8,7 @@ use tracing::debug;
 
 use crate::services::link_db_service::{Link, LinkDBError, LinkDBService};
 
-/// Errors that can occur when using RecursiveLinks
+/// Errors that can occur when using `RecursiveLinks`
 #[derive(Error, Debug)]
 pub enum RecursiveLinksError {
     #[error("LinkDB error: {0}")]
@@ -30,7 +30,7 @@ pub struct LinkNode {
     pub children: Vec<LinkNode>,
 }
 
-/// RecursiveLinks - API for working with hierarchical link structures
+/// `RecursiveLinks` - API for working with hierarchical link structures
 ///
 /// This API provides methods for traversing and manipulating link trees,
 /// where links can form parent-child relationships.
@@ -41,11 +41,12 @@ pub struct RecursiveLinks {
 }
 
 impl RecursiveLinks {
-    /// Create a new RecursiveLinks instance
+    /// Create a new `RecursiveLinks` instance
     ///
     /// # Arguments
     ///
     /// * `db_path` - Optional path to the database file
+    #[must_use]
     pub fn new(db_path: Option<PathBuf>) -> Self {
         Self {
             db: LinkDBService::new(db_path),
@@ -98,7 +99,7 @@ impl RecursiveLinks {
         }
     }
 
-    /// Recursively build a tree node (using Box::pin for async recursion)
+    /// Recursively build a tree node (using `Box::pin` for async recursion)
     fn build_tree_impl<'a>(
         &'a self,
         link: Link,
@@ -140,7 +141,7 @@ impl RecursiveLinks {
         Ok(true)
     }
 
-    /// Recursively delete a link and its children (using Box::pin for async recursion)
+    /// Recursively delete a link and its children (using `Box::pin` for async recursion)
     fn delete_link_impl<'a>(
         &'a self,
         id: u64,
@@ -160,26 +161,25 @@ impl RecursiveLinks {
     /// Count all links in a tree starting from the given root
     pub async fn count_tree(&self, root_id: u64) -> Result<usize, RecursiveLinksError> {
         let tree = self.build_tree(root_id).await?;
-        match tree {
-            Some(node) => Ok(self.count_nodes(&node)),
-            None => Ok(0),
-        }
+        Ok(tree.map_or(0, |node| Self::count_nodes(&node)))
     }
 
     /// Recursively count nodes in a tree
-    pub fn count_nodes(&self, node: &LinkNode) -> usize {
+    #[must_use]
+    pub fn count_nodes(node: &LinkNode) -> usize {
         let mut count = 1; // Count this node
         for child in &node.children {
-            count += self.count_nodes(child);
+            count += Self::count_nodes(child);
         }
         count
     }
 
     /// Flatten a tree into a list of links (depth-first order)
-    pub fn flatten_tree(&self, node: &LinkNode) -> Vec<Link> {
+    #[must_use]
+    pub fn flatten_tree(node: &LinkNode) -> Vec<Link> {
         let mut result = vec![node.link.clone()];
         for child in &node.children {
-            result.extend(self.flatten_tree(child));
+            result.extend(Self::flatten_tree(child));
         }
         result
     }
@@ -204,8 +204,6 @@ mod tests {
 
     #[test]
     fn test_count_nodes() {
-        let links = RecursiveLinks::new(None);
-
         let tree = LinkNode {
             link: Link {
                 id: 1,
@@ -239,13 +237,11 @@ mod tests {
             ],
         };
 
-        assert_eq!(links.count_nodes(&tree), 4);
+        assert_eq!(RecursiveLinks::count_nodes(&tree), 4);
     }
 
     #[test]
     fn test_flatten_tree() {
-        let links = RecursiveLinks::new(None);
-
         let tree = LinkNode {
             link: Link {
                 id: 1,
@@ -262,7 +258,7 @@ mod tests {
             }],
         };
 
-        let flattened = links.flatten_tree(&tree);
+        let flattened = RecursiveLinks::flatten_tree(&tree);
         assert_eq!(flattened.len(), 2);
         assert_eq!(flattened[0].id, 1);
         assert_eq!(flattened[1].id, 2);

@@ -1,5 +1,7 @@
 //! Basic usage example for the Links Client library
 
+#![allow(clippy::uninlined_format_args)]
+
 use links_client::services::link_db_service::Link;
 use links_client::{ILinks, LinkConstants};
 

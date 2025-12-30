@@ -1,4 +1,4 @@
-//! AuthStorageService - Service for user authentication data storage
+//! `AuthStorageService` - Service for user authentication data storage
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -7,7 +7,7 @@ use tracing::{debug, error};
 
 use super::link_db_service::{LinkDBError, LinkDBService};
 
-/// Errors that can occur when using AuthStorageService
+/// Errors that can occur when using `AuthStorageService`
 #[derive(Error, Debug)]
 pub enum AuthStorageError {
     #[error("LinkDB error: {0}")]
@@ -31,10 +31,10 @@ pub struct User {
     pub data: HashMap<String, String>,
 }
 
-/// AuthStorageService - Service for user authentication data storage
+/// `AuthStorageService` - Service for user authentication data storage
 ///
 /// This service provides methods for storing and retrieving user authentication data
-/// using the LinkDB backend.
+/// using the `LinkDB` backend.
 pub struct AuthStorageService {
     db: LinkDBService,
     /// Type identifier for user links
@@ -42,7 +42,7 @@ pub struct AuthStorageService {
 }
 
 impl AuthStorageService {
-    /// Create a new AuthStorageService with the specified database path
+    /// Create a new `AuthStorageService` with the specified database path
     ///
     /// # Arguments
     ///

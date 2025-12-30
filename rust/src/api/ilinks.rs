@@ -1,4 +1,4 @@
-//! ILinks - Universal flat API compatible with Platform.Data ILinks interface
+//! `ILinks` - Universal flat API compatible with Platform.Data `ILinks` interface
 
 use std::path::PathBuf;
 use thiserror::Error;
@@ -6,7 +6,7 @@ use tracing::debug;
 
 use crate::services::link_db_service::{Link, LinkDBError, LinkDBService};
 
-/// Errors that can occur when using ILinks
+/// Errors that can occur when using `ILinks`
 #[derive(Error, Debug)]
 pub enum ILinksError {
     #[error("LinkDB error: {0}")]
@@ -22,7 +22,7 @@ pub enum ILinksError {
     NoLinksFound,
 }
 
-/// Constants for ILinks operations
+/// Constants for `ILinks` operations
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LinkConstants {
     /// Continue iteration
@@ -35,6 +35,7 @@ pub enum LinkConstants {
 
 impl LinkConstants {
     /// Get the numeric value for Any constant
+    #[must_use]
     pub const fn any_value() -> u64 {
         0
     }
@@ -49,7 +50,7 @@ pub struct LinkChange {
     pub after: Option<Link>,
 }
 
-/// ILinks - Universal flat Turing complete API for Links
+/// `ILinks` - Universal flat Turing complete API for Links
 /// Compatible with <https://github.com/linksplatform/Data/blob/main/csharp/Platform.Data/ILinks.cs>
 ///
 /// Flat meaning it only works with a single link at a time.
@@ -58,7 +59,7 @@ pub struct ILinks {
 }
 
 impl ILinks {
-    /// Create a new ILinks instance
+    /// Create a new `ILinks` instance
     ///
     /// # Arguments
     ///
@@ -70,6 +71,7 @@ impl ILinks {
     }
 
     /// Get constants for this Links instance
+    #[must_use]
     pub const fn get_constants(&self) -> LinkConstants {
         LinkConstants::Any
     }
@@ -85,11 +87,11 @@ impl ILinks {
     pub async fn count(&self, restriction: Option<&[u64]>) -> Result<usize, ILinksError> {
         let all_links = self.db.read_all_links().await?;
 
-        if restriction.is_none() || restriction.map_or(true, |r| r.is_empty()) {
+        if restriction.is_none() || restriction.map_or(true, <[u64]>::is_empty) {
             return Ok(all_links.len());
         }
 
-        let filtered = self.filter_links(&all_links, restriction);
+        let filtered = Self::filter_links(&all_links, restriction);
         Ok(filtered.len())
     }
 
@@ -108,7 +110,7 @@ impl ILinks {
         F: FnMut(&Link) -> LinkConstants,
     {
         let all_links = self.db.read_all_links().await?;
-        let filtered = self.filter_links(&all_links, restriction);
+        let filtered = Self::filter_links(&all_links, restriction);
 
         if let Some(ref mut h) = handler {
             for link in filtered {
@@ -173,7 +175,7 @@ impl ILinks {
     where
         F: FnMut(LinkChange),
     {
-        if restriction.is_none() || restriction.map_or(true, |r| r.is_empty()) {
+        if restriction.is_none() || restriction.map_or(true, <[u64]>::is_empty) {
             return Err(ILinksError::InvalidRestriction(
                 "Restriction required for update".to_string(),
             ));
@@ -186,7 +188,7 @@ impl ILinks {
         }
 
         let all_links = self.db.read_all_links().await?;
-        let filtered = self.filter_links(&all_links, restriction);
+        let filtered = Self::filter_links(&all_links, restriction);
 
         if filtered.is_empty() {
             return Err(ILinksError::NoLinksFound);
@@ -230,14 +232,14 @@ impl ILinks {
     where
         F: FnMut(LinkChange),
     {
-        if restriction.is_none() || restriction.map_or(true, |r| r.is_empty()) {
+        if restriction.is_none() || restriction.map_or(true, <[u64]>::is_empty) {
             return Err(ILinksError::InvalidRestriction(
                 "Restriction required for delete".to_string(),
             ));
         }
 
         let all_links = self.db.read_all_links().await?;
-        let filtered = self.filter_links(&all_links, restriction);
+        let filtered = Self::filter_links(&all_links, restriction);
 
         if filtered.is_empty() {
             return Err(ILinksError::NoLinksFound);
@@ -260,7 +262,7 @@ impl ILinks {
     }
 
     /// Helper method to filter links based on restriction
-    fn filter_links(&self, links: &[Link], restriction: Option<&[u64]>) -> Vec<Link> {
+    fn filter_links(links: &[Link], restriction: Option<&[u64]>) -> Vec<Link> {
         let restriction = match restriction {
             Some(r) if !r.is_empty() => r,
             _ => return links.to_vec(),
@@ -305,7 +307,6 @@ mod tests {
 
     #[test]
     fn test_filter_links() {
-        let links = ILinks::new(None).unwrap();
         let all_links = vec![
             Link {
                 id: 1,
@@ -325,21 +326,21 @@ mod tests {
         ];
 
         // Filter by ID
-        let filtered = links.filter_links(&all_links, Some(&[1]));
+        let filtered = ILinks::filter_links(&all_links, Some(&[1]));
         assert_eq!(filtered.len(), 1);
         assert_eq!(filtered[0].id, 1);
 
         // Filter by source and target
-        let filtered = links.filter_links(&all_links, Some(&[2, 3]));
+        let filtered = ILinks::filter_links(&all_links, Some(&[2, 3]));
         assert_eq!(filtered.len(), 1);
         assert_eq!(filtered[0].id, 1);
 
         // Filter with Any source
-        let filtered = links.filter_links(&all_links, Some(&[0, 3]));
+        let filtered = ILinks::filter_links(&all_links, Some(&[0, 3]));
         assert_eq!(filtered.len(), 1);
 
         // No restriction returns all
-        let filtered = links.filter_links(&all_links, None);
+        let filtered = ILinks::filter_links(&all_links, None);
         assert_eq!(filtered.len(), 3);
     }
 }

@@ -1,4 +1,4 @@
-//! MenuStorageService - Service for menu item storage
+//! `MenuStorageService` - Service for menu item storage
 
 use std::path::PathBuf;
 use thiserror::Error;
@@ -6,7 +6,7 @@ use tracing::{debug, error};
 
 use super::link_db_service::{LinkDBError, LinkDBService};
 
-/// Errors that can occur when using MenuStorageService
+/// Errors that can occur when using `MenuStorageService`
 #[derive(Error, Debug)]
 pub enum MenuStorageError {
     #[error("LinkDB error: {0}")]
@@ -27,10 +27,10 @@ pub struct MenuItem {
     pub parent_id: u64,
 }
 
-/// MenuStorageService - Service for menu item storage
+/// `MenuStorageService` - Service for menu item storage
 ///
 /// This service provides methods for storing and retrieving menu configuration
-/// using the LinkDB backend.
+/// using the `LinkDB` backend.
 pub struct MenuStorageService {
     db: LinkDBService,
     /// Type identifier for menu item links
@@ -38,7 +38,7 @@ pub struct MenuStorageService {
 }
 
 impl MenuStorageService {
-    /// Create a new MenuStorageService with the specified database path
+    /// Create a new `MenuStorageService` with the specified database path
     ///
     /// # Arguments
     ///

@@ -1,4 +1,6 @@
-//! Tests for the ILinks API
+//! Tests for the `ILinks` API
+
+#![allow(clippy::doc_markdown)]
 
 use links_client::services::link_db_service::Link;
 use links_client::{ILinks, LinkConstants};

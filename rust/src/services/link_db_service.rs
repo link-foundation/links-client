@@ -1,4 +1,4 @@
-//! LinkDBService - Service wrapper for link-cli (clink) database operations
+//! `LinkDBService` - Service wrapper for link-cli (clink) database operations
 
 use std::env;
 use std::path::PathBuf;
@@ -7,7 +7,7 @@ use thiserror::Error;
 use tokio::process::Command;
 use tracing::{debug, error, warn};
 
-/// Errors that can occur when using LinkDBService
+/// Errors that can occur when using `LinkDBService`
 #[derive(Error, Debug)]
 pub enum LinkDBError {
     #[error("LinkDB not available: clink command not found. Please install link-cli.")]
@@ -34,7 +34,7 @@ pub struct Link {
     pub target: u64,
 }
 
-/// LinkDBService - Wrapper for link-cli database operations
+/// `LinkDBService` - Wrapper for link-cli database operations
 /// Uses the clink tool (link-cli) for associative link-based data storage
 pub struct LinkDBService {
     db_path: PathBuf,
@@ -42,7 +42,7 @@ pub struct LinkDBService {
 }
 
 impl LinkDBService {
-    /// Create a new LinkDBService with the specified database path
+    /// Create a new `LinkDBService` with the specified database path
     ///
     /// # Arguments
     ///
@@ -138,7 +138,8 @@ impl LinkDBService {
 
     /// Parse clink output to extract links
     /// Format: (id: source target)
-    pub fn parse_links(&self, output: &str) -> Vec<Link> {
+    #[must_use]
+    pub fn parse_links(output: &str) -> Vec<Link> {
         if output.trim().is_empty() {
             return Vec::new();
         }
@@ -199,7 +200,7 @@ impl LinkDBService {
     pub async fn read_all_links(&self) -> Result<Vec<Link>, LinkDBError> {
         let query = "((($i: $s $t)) (($i: $s $t)))";
         let output = self.execute_query(query, false, false, true, false).await?;
-        Ok(self.parse_links(&output))
+        Ok(Self::parse_links(&output))
     }
 
     /// Read a specific link by ID
@@ -208,7 +209,7 @@ impl LinkDBService {
         let output = self
             .execute_query(&query, false, false, true, false)
             .await?;
-        let links = self.parse_links(&output);
+        let links = Self::parse_links(&output);
         Ok(links.into_iter().next())
     }
 
@@ -288,10 +289,8 @@ mod tests {
 
     #[test]
     fn test_parse_links() {
-        let service = LinkDBService::new(None);
-
         let output = "(1: 2 3)\n(4: 5 6)";
-        let links = service.parse_links(output);
+        let links = LinkDBService::parse_links(output);
 
         assert_eq!(links.len(), 2);
         assert_eq!(
@@ -314,10 +313,8 @@ mod tests {
 
     #[test]
     fn test_parse_empty_output() {
-        let service = LinkDBService::new(None);
-
         let output = "";
-        let links = service.parse_links(output);
+        let links = LinkDBService::parse_links(output);
 
         assert!(links.is_empty());
     }
