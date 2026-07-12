@@ -239,3 +239,5 @@ export function createMenuConfigLinkDBRoutes() {
 
   return router;
 }
+
+export default createMenuConfigLinkDBRoutes;
