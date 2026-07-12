@@ -1,5 +1,11 @@
 # @link-foundation/links-client
 
+## 1.2.0
+
+### Minor Changes
+
+- 69f0901: Add TypeScript declarations for the JavaScript package's public API.
+
 ## 1.1.0
 
 ### Minor Changes
