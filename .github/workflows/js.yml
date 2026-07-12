@@ -90,7 +90,9 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Install clink
-        run: dotnet tool install --global clink
+        # Newer clink releases enable strict missing-reference validation by default,
+        # which is incompatible with the client's current link creation API.
+        run: dotnet tool install --global clink --version 2.2.2
 
       - name: Verify clink installation
         run: clink --version
