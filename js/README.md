@@ -17,6 +17,9 @@ dotnet tool install --global clink
 npm install @link-foundation/links-client
 ```
 
+The package includes TypeScript declarations for all public exports, so no separate
+`@types` package is required.
+
 Or use GitHub directly:
 
 ```bash
