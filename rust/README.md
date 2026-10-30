@@ -142,3 +142,62 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## License
 
 Unlicense - see [LICENSE](../LICENSE)
+
+## Publishing to crates.io
+
+This crate is intended for crates.io. The `Rust CI/CD` workflow
+(`.github/workflows/rust.yml`) checks the package with
+`cargo publish --dry-run --locked` on pull requests without registry credentials.
+Both automatic releases (an unreleased version on `main`) and manual version
+bumps (dispatch the workflow on `main`) publish to crates.io before creating the
+`rust-v<version>` GitHub release. The initial version is `1.0.0`.
+An existing version on crates.io is skipped, allowing recovery after bootstrap
+or a failed GitHub release creation. Registry lookup and upload errors fail the
+release rather than being treated as a successful publication.
+
+Release jobs first request a short-lived token with
+[`rust-lang/crates-io-auth-action`](https://github.com/rust-lang/crates-io-auth-action)
+and `id-token: write`. If OIDC is unavailable, they use the existing
+`CARGO_REGISTRY_TOKEN` secret, then `CARGO_TOKEN`. These fallback secrets remain
+optional and are not deleted. If all authentication methods are unavailable,
+the release fails with setup instructions.
+
+### First release and trusted publisher registration
+
+crates.io requires an initial token-authenticated publish before a crate can
+register a trusted publisher. After merging the workflow, run the following
+from an authenticated maintainer environment with
+[`package-registry-manager`](https://github.com/link-foundation/package-registry-manager)
+installed:
+
+```bash
+package-registry-manager setup --repository . --registry crates-io --execute
+```
+
+The setup tool validates the package, publishes the first version from the
+default branch using a short-lived crate-scoped token, registers the trusted
+publisher, then revokes and verifies revocation of the bootstrap token. Keep
+existing fallback secrets; do not opt into deleting token secrets.
+
+Configure the trusted publisher for:
+
+- GitHub owner: `link-foundation`
+- Repository: `links-client`
+- Workflow filename: `rust.yml` (in `.github/workflows/`)
+- Environment: leave empty (these release jobs do not use an environment)
+
+Subsequent CI releases use OIDC without a stored token. Verify the first release
+and publisher in the crate's crates.io settings before considering setup
+complete. Registry authentication and publisher registration cannot be verified
+by a PR dry run.
+
+To run the workflow regression checks locally:
+
+```bash
+python -m pip install PyYAML==6.0.3
+python -m unittest discover -s experiments -p 'test_rust_release.py' -v
+```
+
+Run these commands from the repository root. The checks cover both release paths,
+OIDC permissions, token fallback, publication ordering, and credential-free PR
+validation.
