@@ -316,6 +316,6 @@ mod tests {
         let output = "";
         let links = LinkDBService::parse_links(output);
 
-        assert!(links.is_empty());
+        assert_eq!(links, []);
     }
 }
