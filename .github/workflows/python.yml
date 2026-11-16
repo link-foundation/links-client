@@ -7,13 +7,22 @@ on:
     paths:
       - 'python/**'
       - '.github/workflows/python.yml'
+      - 'experiments/test_python_release.py'
+      - 'experiments/check_python_wheel.py'
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - 'python/**'
       - '.github/workflows/python.yml'
+      - 'experiments/test_python_release.py'
+      - 'experiments/check_python_wheel.py'
   workflow_dispatch:
     inputs:
+      publish_current:
+        description: 'Publish the tested version on the selected ref without a version bump or branch push'
+        required: false
+        type: boolean
+        default: false
       bump_type:
         description: 'Version bump type'
         required: true
@@ -70,6 +79,7 @@ jobs:
   test-python:
     name: Test Python
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [changelog]
     if: always() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.changelog.result == 'success' || needs.changelog.result == 'skipped')
     steps:
@@ -80,22 +90,31 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install dependencies
+        working-directory: ./python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" PyYAML
+
+      - name: Run unit tests without clink
+        working-directory: ./python
+        run: pytest -m "not integration"
+
+      - name: Check Python release workflow
+        run: python -m unittest discover -s experiments -p test_python_release.py -v
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
       - name: Install clink
-        run: dotnet tool install --global clink
+        # Later releases reject the implicit references used by this client.
+        # Keep in sync with the JavaScript integration job.
+        run: dotnet tool install --global clink --version 2.2.2
 
       - name: Verify clink installation
         run: clink --version
-
-      - name: Install dependencies
-        working-directory: ./python
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
 
       - name: Create test data directories
         run: |
@@ -103,14 +122,15 @@ jobs:
           mkdir -p ./data/auth-data/users
           mkdir -p ./data/menu-items
 
-      - name: Run tests
+      - name: Run clink integration tests
         working-directory: ./python
-        run: pytest
+        run: pytest -m integration
 
   # Build package - only runs if tests pass
   build:
     name: Build Package
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [test-python]
     if: always() && needs.test-python.result == 'success'
     steps:
@@ -133,6 +153,12 @@ jobs:
       - name: Check package
         working-directory: ./python
         run: twine check dist/*
+
+      - name: Verify installed wheel imports
+        run: |
+          python -m venv "$RUNNER_TEMP/wheel-check"
+          "$RUNNER_TEMP/wheel-check/bin/pip" install python/dist/*.whl
+          "$RUNNER_TEMP/wheel-check/bin/python" experiments/check_python_wheel.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -211,11 +237,46 @@ jobs:
 
           echo "✅ Created GitHub release: $TAG"
 
-  # Manual release via workflow_dispatch
+  # Explicitly publish the tested version on the selected ref (including first releases).
+  publish-current:
+    name: Publish Current Version
+    needs: [test-python, build]
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_current
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download tested artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-dist
+          path: python/dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: python/dist/
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(grep -Po '(?<=^version = ")[^"]*' python/pyproject.toml)
+          gh release create "python-v$VERSION" \
+            --target "$GITHUB_SHA" \
+            --title "Python $VERSION" \
+            --notes "Python package release $VERSION" \
+            --repo "${{ github.repository }}"
+
+  # Manual version bump and release via workflow_dispatch, only on main.
   manual-release:
     name: Manual Release
     needs: [test-python, build]
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && !inputs.publish_current
     runs-on: ubuntu-latest
     permissions:
       contents: write

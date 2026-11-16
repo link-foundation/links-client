@@ -96,6 +96,7 @@ class LinkDBService:
             )
         except subprocess.CalledProcessError as error:
             logger.error(f"Failed to execute clink command: {error}")
+            logger.debug("clink stdout: %s; stderr: %s", error.stdout, error.stderr)
             raise RuntimeError(f"LinkDB query failed: {error}")
 
     def parse_links(self, output: str) -> List[Dict[str, int]]:

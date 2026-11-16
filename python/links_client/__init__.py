@@ -11,7 +11,7 @@ from links_client.services.auth_storage_service import AuthStorageService
 from links_client.api.ilinks import ILinks, LinkConstants
 from links_client.api.recursive_links import RecursiveLinks
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __all__ = [
     "LinkDBService",
     "MenuStorageService",
