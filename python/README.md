@@ -146,6 +146,13 @@ https://pypi.org/manage/project/links-client/settings/publishing/:
 - Workflow: `python.yml`
 - Environment: leave empty (the release jobs do not declare one)
 
+If publishing reports `invalid-pending-publisher: valid token, but project already
+exists`, the publisher is still registered for creation of a new project. Since
+`links-client` already exists, its owner must add the publisher on the existing
+project's publishing settings page above. A pending publisher alone cannot
+authorize uploads to that project. After attachment, repeat a dispatch with
+`publish_current` enabled to publish the prepared version.
+
 See [PyPI's publisher setup instructions](https://docs.pypi.org/trusted-publishers/adding-a-publisher/).
 Confirm attachment by inspecting that settings page and a successful `Publish to
 PyPI` step using OIDC. A passing test/build job or a manually uploaded package
