@@ -54,6 +54,12 @@ class PythonReleaseTests(unittest.TestCase):
                 publish = next(step for step in job["steps"]
                                if step.get("uses", "").startswith("pypa/gh-action-pypi-publish@"))
                 self.assertNotIn("password", publish.get("with", {}))
+                notice = next(step for step in job["steps"]
+                              if "invalid-pending-publisher" in step.get("run", ""))
+                self.assertIn("failure()", notice["if"])
+                self.assertIn(f"steps.{publish['id']}.outcome == 'failure'", notice["if"])
+                self.assertIn("https://pypi.org/manage/project/links-client/settings/publishing/", notice["run"])
+                self.assertIn("workflow: python.yml", notice["run"])
 
     def test_publish_current_is_explicit_and_uses_tested_artifacts_without_branch_pushes(self):
         job = self.jobs["publish-current"]
