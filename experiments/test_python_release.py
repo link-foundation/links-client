@@ -46,6 +46,9 @@ class PythonReleaseTests(unittest.TestCase):
                 job = self.jobs[name]
                 self.assertEqual(job["permissions"]["id-token"], "write")
                 self.assertIn("test-python", job["needs"])
+                self.assertIn("always()", job["if"])
+                self.assertIn("needs.test-python.result == 'success'", job["if"])
+                self.assertIn("needs.build.result == 'success'", job["if"])
                 if name != "publish-current":
                     self.assertIn("github.ref == 'refs/heads/main'", job["if"])
                 publish = next(step for step in job["steps"]

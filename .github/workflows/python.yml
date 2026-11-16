@@ -170,7 +170,7 @@ jobs:
   auto-release:
     name: Auto Release
     needs: [test-python, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test-python.result == 'success' && needs.build.result == 'success'
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.test-python.result == 'success' && needs.build.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -241,7 +241,7 @@ jobs:
   publish-current:
     name: Publish Current Version
     needs: [test-python, build]
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_current
+    if: always() && github.event_name == 'workflow_dispatch' && inputs.publish_current && needs.test-python.result == 'success' && needs.build.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -276,7 +276,7 @@ jobs:
   manual-release:
     name: Manual Release
     needs: [test-python, build]
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && !inputs.publish_current
+    if: always() && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && !inputs.publish_current && needs.test-python.result == 'success' && needs.build.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write

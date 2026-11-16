@@ -5,6 +5,7 @@
 - Include the API modules in built distributions and verify installed wheel imports before release.
 - Retain clink failure output in opt-in debug logs and document PyPI OIDC publisher setup.
 - Restrict manual releases to main, matching automatic releases.
+- Run release jobs after successful tests/builds even when the PR-only changelog job is skipped.
 
 ### Added
 

@@ -10,3 +10,10 @@
 - Run focused local checks, push only issue-26-beef2acf3878, and verify python.yml on the current commit.
 - Verify live PyPI OIDC publication and publisher attachment separately from test success. If credentials or default-branch restrictions prevent verification, record exact unfinished criteria and evidence in PR 27.
 - Review the final PR diff, verify main is included and the tree is clean, update the PR description and mark ready without merging.
+
+## Verification evidence
+
+- Minimal clink probe: 4.0.6 rejects non-existent reference 1001; 2.2.2 creates the link.
+- Locally passed 24 unit tests, 24 integration tests, five workflow checks, build, twine check, installed-wheel imports, and actionlint. The existing PyPI 1.0.0 wheel fails the import check with missing `links_client.api`.
+- First PR run 43779552576 and dispatch 43779547142 passed tests and builds at 1e678c1. The dispatch exposed a second release blocker: skipped changelog ancestors cause release jobs to skip under the default job success condition. Regression checks reproduce the missing `always()` guard in all three release paths; explicit successful test/build result checks retain the release gates.
+- Live OIDC verification must be repeated after correcting those release conditions; success of the earlier dispatch did not include a publish attempt.
