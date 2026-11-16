@@ -1,51 +1,20 @@
 """Test file for ILinks flat API"""
 
-import os
+import tempfile
+import pytest
 import unittest
 from pathlib import Path
 from links_client.api.ilinks import ILinks, LinkConstants
-from links_client.services.link_db_service import LinkDBService
-
-
-# Check if clink is available
-def check_clink_available():
-    """Check if clink command is available"""
-    try:
-        service = LinkDBService("data/test-check.links")
-        service.execute_query('(() ())', after=True)
-        return True
-    except RuntimeError as e:
-        if 'clink command not found' in str(e):
-            return False
-        raise
-
-
-clink_available = check_clink_available()
 
 
 class TestILinksAPI(unittest.TestCase):
     """Test cases for ILinks flat API"""
 
-    @classmethod
-    def setUpClass(cls):
-        """Set up test database path"""
-        cls.test_db_path = Path("data/test-ilinks.links")
-        # Clean up test database if exists
-        if cls.test_db_path.exists():
-            cls.test_db_path.unlink()
-
-        # Print warning if clink not available
-        if not clink_available:
-            print('⚠️  clink not available - ILinks tests will be skipped')
-
-    @classmethod
-    def tearDownClass(cls):
-        """Clean up test database"""
-        if cls.test_db_path.exists():
-            cls.test_db_path.unlink()
-
     def setUp(self):
-        """Set up test instance"""
+        """Use an independent database for every test."""
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.test_db_path = Path(directory.name) / "test.links"
         self.links = ILinks(str(self.test_db_path))
 
     def test_constants(self):
@@ -56,14 +25,14 @@ class TestILinksAPI(unittest.TestCase):
         self.assertIsNotNone(LinkConstants.CONTINUE)
         self.assertIsNotNone(LinkConstants.BREAK)
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_create_link(self):
         """Test creating a link with source and target"""
         link_id = self.links.create([1, 2])
         self.assertIsInstance(link_id, int)
         self.assertGreater(link_id, 0)
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_create_multiple_links(self):
         """Test creating multiple links"""
         link_id1 = self.links.create([3, 4])
@@ -72,7 +41,7 @@ class TestILinksAPI(unittest.TestCase):
         self.assertGreater(link_id2, 0)
         self.assertNotEqual(link_id1, link_id2)
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_create_with_handler(self):
         """Test that handler is called on create"""
         handler_called = False
@@ -89,13 +58,12 @@ class TestILinksAPI(unittest.TestCase):
         self.assertIsNotNone(captured_change["after"])
         self.assertEqual(captured_change["after"]["id"], link_id)
 
-    @unittest.skipIf(not clink_available, "clink not available")
     def test_create_invalid_substitution(self):
         """Test that creating with invalid substitution raises error"""
         with self.assertRaises(ValueError):
             self.links.create([1])
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_count_all_links(self):
         """Test counting all links"""
         # First create a link to ensure count > 0
@@ -103,7 +71,7 @@ class TestILinksAPI(unittest.TestCase):
         count = self.links.count()
         self.assertGreater(count, 0)
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_count_with_restriction(self):
         """Test counting links with restriction"""
         self.links.create([10, 20])
@@ -113,15 +81,16 @@ class TestILinksAPI(unittest.TestCase):
         count = self.links.count([10, 0])
         self.assertGreaterEqual(count, 2)
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_count_non_matching(self):
         """Test counting with non-matching restriction"""
         count = self.links.count([999999, 999999])
         self.assertEqual(count, 0)
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_each_iterate_all(self):
         """Test iterating through all links"""
+        self.links.create([1, 2])
         all_links = []
 
         def handler(link):
@@ -132,9 +101,11 @@ class TestILinksAPI(unittest.TestCase):
         self.assertEqual(result, LinkConstants.CONTINUE)
         self.assertGreater(len(all_links), 0)
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_each_with_break(self):
         """Test that each respects Break signal"""
+        self.links.create([1, 2])
+        self.links.create([3, 4])
         iteration_count = 0
 
         def handler(link):
@@ -148,7 +119,7 @@ class TestILinksAPI(unittest.TestCase):
         self.assertEqual(result, LinkConstants.BREAK)
         self.assertEqual(iteration_count, 2)
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_each_with_restriction(self):
         """Test filtering links with restriction"""
         link_id = self.links.create([100, 200])
@@ -164,7 +135,7 @@ class TestILinksAPI(unittest.TestCase):
             any(l["source"] == 100 and l["target"] == 200 for l in found_links)
         )
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_update_link(self):
         """Test updating a link"""
         link_id = self.links.create([50, 60])
@@ -183,7 +154,7 @@ class TestILinksAPI(unittest.TestCase):
         self.assertEqual(found_links[0]["source"], 70)
         self.assertEqual(found_links[0]["target"], 80)
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_update_with_handler(self):
         """Test that handler is called on update"""
         link_id = self.links.create([90, 100])
@@ -202,19 +173,18 @@ class TestILinksAPI(unittest.TestCase):
         self.assertEqual(captured_change["before"]["source"], 90)
         self.assertEqual(captured_change["after"]["source"], 110)
 
-    @unittest.skipIf(not clink_available, "clink not available")
     def test_update_no_restriction(self):
         """Test that update requires restriction"""
         with self.assertRaises(ValueError):
             self.links.update(None, [1, 2])
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_update_no_matching_link(self):
         """Test that update raises error if no matching link"""
         with self.assertRaises(ValueError):
             self.links.update([999999, 0, 0], [1, 2])
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_delete_link(self):
         """Test deleting a link"""
         link_id = self.links.create([130, 140])
@@ -226,7 +196,7 @@ class TestILinksAPI(unittest.TestCase):
         count = self.links.count([link_id, 0, 0])
         self.assertEqual(count, 0)
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_delete_with_handler(self):
         """Test that handler is called on delete"""
         link_id = self.links.create([150, 160])
@@ -243,13 +213,12 @@ class TestILinksAPI(unittest.TestCase):
         self.assertIsNotNone(captured_change["before"])
         self.assertIsNone(captured_change["after"])
 
-    @unittest.skipIf(not clink_available, "clink not available")
     def test_delete_no_restriction(self):
         """Test that delete requires restriction"""
         with self.assertRaises(ValueError):
             self.links.delete(None)
 
-    @unittest.skipIf(not clink_available, "clink not available")
+    @pytest.mark.integration
     def test_delete_no_matching_link(self):
         """Test that delete raises error if no matching link"""
         with self.assertRaises(ValueError):

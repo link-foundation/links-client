@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "links-client"
-version = "1.0.0"
+version = "1.0.1"
 description = "Python client library for link-cli (Links Theory database)"
 readme = "README.md"
 license = {text = "Unlicense"}
@@ -38,9 +38,11 @@ Repository = "https://github.com/link-foundation/links-client"
 Issues = "https://github.com/link-foundation/links-client/issues"
 
 [tool.setuptools]
-packages = ["links_client", "links_client.services", "links_client.utils"]
+packages = ["links_client", "links_client.api", "links_client.services", "links_client.utils"]
 
 [tool.pytest.ini_options]
+addopts = '-m "not integration"'
+markers = ["integration: requires the external clink 2.2.2 binary (select with -m integration)"]
 testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
